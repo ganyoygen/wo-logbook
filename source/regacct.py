@@ -1,12 +1,16 @@
 import os
+import mysql.connector
 import tkinter as tk
-from tkinter import ttk, Toplevel
+from tkinter import ttk,Toplevel,messagebox
 from tkcalendar import DateEntry
+from mysqlcon import read_db_config
 import sys
+from datetime import datetime
 
 class RegisterAcct(object):
     def __init__(self,parent):
         top = self.top = Toplevel(parent)
+        top.title("Create your User Account")
         self.parent = parent
         topFrame = ttk.Frame(top)
         topFrame.grid(row=0,column=0)
@@ -28,7 +32,7 @@ class RegisterAcct(object):
         self.entEmail = ttk.Entry(topFrame, width=20)
         self.entEmail.grid(row=3, column=2)
 
-        self.okbtn=ttk.Button(topFrame,text="OK",width=7,command=self.proses)
+        self.okbtn=ttk.Button(topFrame,text="Sign Up",width=7,command=self.proses)
         self.okbtn.grid(row=4,column=1)
         # self.okbtn["state"] = "disabled"
         topFrame.wait_visibility() # window needs to be visible for the grab
@@ -70,10 +74,46 @@ class RegisterAcct(object):
         self.top.bell()
     
     def proses(self):
-        print(self.entUser.get())
-        print(self.entPass.get())
-        print(self.entEmail.get())
-        self.top.destroy()
+        getTime = datetime.now()
+        try:
+            db_config = read_db_config()
+            con = mysql.connector.connect(**db_config)
+            cur = con.cursor()
+            sql = "SELECT * FROM acct WHERE username = %s"
+            cur.execute(sql,(self.entUser.get(),))
+            data = cur.fetchone()
+            if (self.entUser.get()==""): self.entUser.focus_set()
+            elif (self.entPass.get()==""): self.entPass.focus_set()
+            elif (self.entConf.get()==""): self.entConf.focus_set()
+            elif (self.entEmail.get()==""): self.entEmail.focus_set()
+            elif data == None :
+                if str(self.entPass.get()).lower() != str(self.entConf.get()).lower():
+                    # parent=self.top karena msgbox with toplevel
+                    messagebox.showerror(title="Error",parent=self.top,\
+                        message="Konfirmasi Password tidak sesuai")
+                    self.entConf.focus_set()
+                else:
+                    sql = "INSERT INTO acct (username, passhash, dept, date_create)"+\
+                          "VALUES(%s,%s,%s,%s)"
+                    cur.execute(sql,(self.entUser.get().strip(),self.entPass.get().strip(),"USER",getTime))
+                    messagebox.showinfo(title="Informasi", message="Data sudah di tersimpan.")
+                    self.top.destroy()
+            else:
+                user = data[1]
+                password = data[2]
+                dept = data[3]
+                if str(self.entUser.get()).lower().strip() == user.lower():
+                    # parent=self.top karena msgbox with toplevel
+                    messagebox.showerror(title="Error",parent=self.top, \
+                        message="User {} sudah terdaftar.\nSilahkan pilih yang lain".format(self.entUser.get()))
+                self.entUser.focus_set()
+        except mysql.connector.Error as err:
+            messagebox.showerror(title="Error",message="SQL Log: {}".format(err))
+        finally:
+            if (con.is_connected()):
+                cur.close()
+                con.close()
+                print("MySQL connection is closed")
 
 class TestRun(object):
     def __init__(self,master):
@@ -87,9 +127,7 @@ class TestRun(object):
         self.master.wait_window(self.gopopup.top)
         self.setbtn["state"] = "normal"
 
-
-
 if __name__ == "__main__":
     root=tk.Tk()
-    m=TestRun(root)
+    TestRun(root)
     root.mainloop()

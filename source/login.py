@@ -59,7 +59,10 @@ class Login:
             data = cur.fetchone()
         except mysql.connector.Error as err:
             messagebox.showerror(title="Error",message="SQL Log: {}".format(err))
-        print(data)
+        finally:
+            if (con.is_connected()):
+                cur.close()
+                con.close()
         if data != None : 
             user = data[1]
             password = data[2]
