@@ -1,9 +1,8 @@
 import os
-import mysql.connector
 import tkinter as tk
 from tkinter import ttk,Toplevel,messagebox
 from tkcalendar import DateEntry
-from mysqlcon import read_db_config
+from socket_mysql import insert_data,getdata_one
 import sys
 from datetime import datetime
 
@@ -75,45 +74,36 @@ class RegisterAcct(object):
     
     def proses(self):
         getTime = datetime.now()
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            sql = "SELECT * FROM acct WHERE username = %s"
-            cur.execute(sql,(self.entUser.get(),))
-            data = cur.fetchone()
-            if (self.entUser.get()==""): self.entUser.focus_set()
-            elif (self.entPass.get()==""): self.entPass.focus_set()
-            elif (self.entConf.get()==""): self.entConf.focus_set()
-            elif (self.entEmail.get()==""): self.entEmail.focus_set()
-            elif data == None :
-                if str(self.entPass.get()).lower() != str(self.entConf.get()).lower():
-                    # parent=self.top karena msgbox with toplevel
-                    messagebox.showerror(title="Error",parent=self.top,\
-                        message="Konfirmasi Password tidak sesuai")
-                    self.entConf.focus_set()
-                else:
-                    sql = "INSERT INTO acct (username, passhash, dept, date_create)"+\
-                          "VALUES(%s,%s,%s,%s)"
-                    cur.execute(sql,(self.entUser.get().strip(),self.entPass.get().strip(),"USER",getTime))
+        sql = "SELECT * FROM acct WHERE username = %s"
+        val = (self.entUser.get(),)
+        data = getdata_one(sql,val)
+        if (self.entUser.get()==""): self.entUser.focus_set()
+        elif (self.entPass.get()==""): self.entPass.focus_set()
+        elif (self.entConf.get()==""): self.entConf.focus_set()
+        elif (self.entEmail.get()==""): self.entEmail.focus_set()
+        elif data == None :
+            if str(self.entPass.get()).lower() != str(self.entConf.get()).lower():
+                # parent=self.top karena msgbox with toplevel
+                messagebox.showerror(title="Error",parent=self.top,\
+                    message="Konfirmasi Password tidak sesuai")
+                self.entConf.focus_set()
+            else:
+                sql = "INSERT INTO acct (username, passhash, dept, date_create)"+\
+                      "VALUES(%s,%s,%s,%s)"
+                val = (self.entUser.get().strip(),self.entPass.get().strip(),"USER",getTime)
+                if (insert_data(sql,val)) == True:
                     messagebox.showinfo(title="Informasi", message="Data sudah di tersimpan.")
                     self.top.destroy()
-            else:
-                user = data[1]
-                password = data[2]
-                dept = data[3]
-                if str(self.entUser.get()).lower().strip() == user.lower():
-                    # parent=self.top karena msgbox with toplevel
-                    messagebox.showerror(title="Error",parent=self.top, \
-                        message="User {} sudah terdaftar.\nSilahkan pilih yang lain".format(self.entUser.get()))
-                self.entUser.focus_set()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error",message="SQL Log: {}".format(err))
-        finally:
-            if (con.is_connected()):
-                cur.close()
-                con.close()
-                print("MySQL connection is closed")
+        else:
+            user = data[1]
+            password = data[2]
+            dept = data[3]
+            if str(self.entUser.get()).lower().strip() == user.lower():
+                # parent=self.top karena msgbox with toplevel
+                messagebox.showerror(title="Error",parent=self.top, \
+                    message="User {} sudah terdaftar.\nSilahkan pilih yang lain".format(self.entUser.get()))
+            self.entUser.focus_set()
+
 
 class TestRun(object):
     def __init__(self,master):

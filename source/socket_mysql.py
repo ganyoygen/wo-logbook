@@ -26,34 +26,48 @@ def read_db_config(filename=getfile, section='mysql'):
 
     return db
 
-def getdata_all(opsi,data):
+def getdata_all(query,param):
     try:
         db_config = read_db_config()
         con = mysql.connector.connect(**db_config)
         cur = con.cursor()
-        cur.execute(opsi, data)
+        cur.execute(query, param)
         results = cur.fetchall()
         return results
+        cur.close()
+        con.close()
     except mysql.connector.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
-    finally:
-        if (con.is_connected()):
-            cur.close()
-            con.close()
 
-def getdata_one(opsi,data):
+def getdata_one(query,param):
     try:
         db_config = read_db_config()
         con = mysql.connector.connect(**db_config)
         cur = con.cursor()
-        cur.execute(opsi, data)
+        cur.execute(query, param)
         results = cur.fetchone()
         return results
+        cur.close()
+        con.close()
     except mysql.connector.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
-    finally:
-        if (con.is_connected()):
-            cur.close()
-            con.close()
+    # finally:
+    #     if (con.is_connected()):
+    #         cur.close()
+    #         con.close()
+
+def insert_data(query,param):
+    try:
+        db_config = read_db_config()
+        con = mysql.connector.connect(**db_config)
+        cur = con.cursor()
+        cur.execute(query, param)
+        return True
+        con.commit()
+        cur.close()
+        con.close()
+    except mysql.connector.Error as err:
+        messagebox.showerror(title="Error", \
+            message="SQL Log: {}".format(err))

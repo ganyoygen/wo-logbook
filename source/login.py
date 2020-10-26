@@ -1,6 +1,5 @@
-import mysql.connector
 import tkinter
-from mysqlcon import read_db_config
+from socket_mysql import getdata_one
 from tkinter import *
 from tkinter import ttk, messagebox
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
@@ -50,19 +49,10 @@ class Login:
 
     #proses cek user dan pass
     def proses(self,event=None):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            sql = "SELECT * FROM acct WHERE username = %s"
-            cur.execute(sql,(self.entryUsername.get(),))
-            data = cur.fetchone()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error",message="SQL Log: {}".format(err))
-        finally:
-            if (con.is_connected()):
-                cur.close()
-                con.close()
+        sql = "SELECT * FROM acct WHERE username = %s"
+        val = (self.entryUsername.get(),)
+        data = getdata_one(sql,val)
+        print(data)
         if data != None : 
             user = data[1]
             password = data[2]
