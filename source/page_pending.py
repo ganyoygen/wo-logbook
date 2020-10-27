@@ -1,6 +1,6 @@
 import tkinter as tk
 import mysql.connector
-from mysqlcon import read_db_config
+from socket_mysql import read_db_config
 from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.scrolledtext import ScrolledText

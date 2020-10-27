@@ -5,7 +5,7 @@ import csv # untuk write ke Excel
 import time
 import datetime
 
-from mysqlcon import read_db_config
+from socket_mysql import read_db_config
 from popup_date import PopupDateTime, CustomDateEntry # custom date module
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
