@@ -1,9 +1,10 @@
 import os
 import tkinter as tk
+from tkinter import *
 from tkinter import ttk,Toplevel,messagebox
 from tkcalendar import DateEntry
 from socket_mysql import insert_data,getdata_one
-import sys
+from custom_entry import LimitEntry
 from datetime import datetime
 
 class RegisterAcct(object):
@@ -13,32 +14,32 @@ class RegisterAcct(object):
         self.parent = parent
         topFrame = ttk.Frame(top)
         topFrame.grid(row=0,column=0)
-        ttk.Label(topFrame,text="Username").grid(row=0,column=0)
-        ttk.Label(topFrame,text="Password").grid(row=1,column=0)
-        ttk.Label(topFrame,text="Confirm").grid(row=2,column=0)
-        ttk.Label(topFrame,text="Email").grid(row=3,column=0)
-        ttk.Label(topFrame,text=":").grid(row=0,column=1)
-        ttk.Label(topFrame,text=":").grid(row=1,column=1)
-        ttk.Label(topFrame,text=":").grid(row=2,column=1)
-        ttk.Label(topFrame,text=":").grid(row=3,column=1)
+        ttk.Label(topFrame,text="Username").grid(row=0,column=0,sticky=W)
+        ttk.Label(topFrame,text="Password").grid(row=1,column=0,sticky=W)
+        ttk.Label(topFrame,text="Confirm").grid(row=2,column=0,sticky=W)
+        ttk.Label(topFrame,text="Email").grid(row=3,column=0,sticky=W)
+        ttk.Label(topFrame,text="(max 10)").grid(row=0,column=1)
+        ttk.Label(topFrame,text="(max 16)").grid(row=1,column=1)
+        # ttk.Label(topFrame,text=":").grid(row=2,column=1)
+        # ttk.Label(topFrame,text=":").grid(row=3,column=1)
 
-        self.entUser = ttk.Entry(topFrame, width=20)
+        self.entUser = LimitEntry(topFrame,maxlen=10,width=20)
         self.entUser.grid(row=0, column=2)
-        self.entPass = ttk.Entry(topFrame,show='*',width=20)
+        self.entPass = LimitEntry(topFrame,maxlen=16,show='*',width=20)
         self.entPass.grid(row=1, column=2)
         self.entConf = ttk.Entry(topFrame,show='*',width=20)
         self.entConf.grid(row=2, column=2)
-        self.entEmail = ttk.Entry(topFrame, width=20)
+        self.entEmail = LimitEntry(topFrame,maxlen=32,width=20)
         self.entEmail.grid(row=3, column=2)
 
-        self.okbtn=ttk.Button(topFrame,text="Sign Up",width=7,command=self.proses)
-        self.okbtn.grid(row=4,column=1)
-        # self.okbtn["state"] = "disabled"
+        self.btnSignUp=ttk.Button(topFrame,text="Sign Up",width=7,command=self.proses)
+        self.btnSignUp.grid(row=4,column=1)
+        # self.btnSignUp["state"] = "disabled"
         topFrame.wait_visibility() # window needs to be visible for the grab
         topFrame.grab_set()
         topFrame.bind("<FocusOut>", self.alarm)
         self._set_transient(parent)
-    
+        
     def _set_transient(self, master, relx=0.5, rely=0.3):
         # window proses ikut parent (without icon taskbar)
         widget = self.top
@@ -87,6 +88,14 @@ class RegisterAcct(object):
                 messagebox.showerror(title="Error",parent=self.top,\
                     message="Konfirmasi Password tidak sesuai")
                 self.entConf.focus_set()
+            elif len(self.entUser.get()) < 3:
+                messagebox.showerror(title="Error",parent=self.top,\
+                    message="Username harus antara 3 - 10 karakter")
+                self.entUser.focus_set()
+            elif self.entUser.get().isalnum() == False:
+                messagebox.showerror(title="Error",parent=self.top,\
+                    message="Username yang diperbolehkan hanya kombinasi huruf dan angka")
+                self.entUser.focus_set()
             else:
                 sql = "INSERT INTO acct (username, passhash, dept, date_create)"+\
                       "VALUES(%s,%s,%s,%s)"
@@ -103,7 +112,6 @@ class RegisterAcct(object):
                 messagebox.showerror(title="Error",parent=self.top, \
                     message="User {} sudah terdaftar.\nSilahkan pilih yang lain".format(self.entUser.get()))
             self.entUser.focus_set()
-
 
 class TestRun(object):
     def __init__(self,master):

@@ -27,7 +27,7 @@ class Login:
         self.entryUsername.grid(row=0, column=1,sticky=W)
         self.entryUsername.bind('<Return>', self.letEntryPass)
 
-        self.entryPassword = ttk.Entry(self.parent,show='+',width=17)
+        self.entryPassword = ttk.Entry(self.parent,show='*',width=17)
         self.entryPassword.grid(row=1, column=1,sticky=W)
         self.entryPassword.bind('<Return>', self.proses)
 
