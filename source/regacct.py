@@ -12,6 +12,7 @@ class RegisterAcct(object):
         top = self.top = Toplevel(parent)
         top.title("Create your User Account")
         self.parent = parent
+        self.value = ""
         topFrame = ttk.Frame(top)
         topFrame.grid(row=0,column=0)
         ttk.Label(topFrame,text="Username").grid(row=0,column=0,sticky=W)
@@ -102,6 +103,7 @@ class RegisterAcct(object):
                 val = (self.entUser.get().strip(),self.entPass.get().strip(),"USER",getTime)
                 if (insert_data(sql,val)) == True:
                     messagebox.showinfo(title="Informasi", message="Data sudah di tersimpan.")
+                    self.value = self.entUser.get()
                     self.top.destroy()
         else:
             user = data[1]

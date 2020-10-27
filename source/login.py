@@ -79,6 +79,8 @@ class Login:
     def regacct(self):
         regacct = RegisterAcct(self.parent)
         regacct.parent.wait_window(regacct.top)
+        self.entryUsername.delete(0,END)
+        self.entryUsername.insert(0,regacct.value)
 
 def main():
     Login(root, "Login Program")
