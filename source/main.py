@@ -5,7 +5,6 @@ from tkinter import ttk
 from page_main import PageMain
 from page_progress import PageProg
 from page_user import UserMgmt
-from page_pending import Pending
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 
 # root = Tk()
@@ -63,13 +62,13 @@ class MainLog:
         self.notebook = ttk.Notebook(self.parent) # lihat, self.parent = root
         self.notebook.pack(fill="both", expand=True)
 
-        page1 = PageMain(self.notebook,self.user,self.dept)
-        page2 = PageProg(self.notebook,self.user,self.dept)
-        page3 = UserMgmt(self.notebook,self.user,self.dept)
-        self.notebook.add(page1, text="Main")
-        self.notebook.add(page2, text="Progress")
-        self.notebook.add(page3, text="User Mgmt")
-        self.notebook.add(Pending(self.notebook),text="Pending")
+        page0 = PageMain(self.notebook,self.user,self.dept)
+        page1 = PageProg(self.notebook,self.user,self.dept)
+        page2 = UserMgmt(self.notebook,self.user,self.dept)
+        self.notebook.add(page0, text="Main")
+        self.notebook.add(page1, text="Progress")
+        self.notebook.add(page2, text="User Mgmt")
+        if self.dept != "ROOT": self.notebook.tab(2, state = 'disabled')
 
     def keluar(self,event=None):
         self.parent.destroy()
