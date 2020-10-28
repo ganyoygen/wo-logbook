@@ -3,12 +3,13 @@ import tkinter
 from tkinter import *
 from tkinter import ttk
 from page_main import PageMain
-from page_pending import Pending
 from page_progress import PageProg
+from page_user import UserMgmt
+from page_pending import Pending
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 
 # root = Tk()
-root = ThemedTk(theme='clearlooks')
+root = ThemedTk(theme='blue')
 
 class WindowDraggable():
     def __init__(self, label):
@@ -64,10 +65,11 @@ class MainLog:
 
         page1 = PageMain(self.notebook,self.user,self.dept)
         page2 = PageProg(self.notebook,self.user,self.dept)
-        page3 = Pending(self.notebook)
+        page3 = UserMgmt(self.notebook,self.user,self.dept)
         self.notebook.add(page1, text="Main")
         self.notebook.add(page2, text="Progress")
-        self.notebook.add(page3, text="Pending")
+        self.notebook.add(page3, text="User Mgmt")
+        self.notebook.add(Pending(self.notebook),text="Pending")
 
     def keluar(self,event=None):
         self.parent.destroy()
