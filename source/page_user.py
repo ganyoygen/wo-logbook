@@ -126,7 +126,7 @@ class UserMgmt(tk.Frame):
 
     def refresh(self):
         # sql = "SELECT * FROM acct"
-        sql = "SELECT `index`,`username`,`dept`,`date_create`,`activated`,`lock`,\
+        sql = "SELECT `uid`,`username`,`dept`,`date_create`,`activated`,`lock`,\
             `date_lock`,`last_login`,`last_host`,`last_ip` FROM `acct`"
         val = ()
         results = getdata_all(sql,val)

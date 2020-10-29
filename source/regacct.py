@@ -98,9 +98,9 @@ class RegisterAcct(object):
                     message="Username yang diperbolehkan hanya kombinasi huruf dan angka")
                 self.entUser.focus_set()
             else:
-                sql = "INSERT INTO acct (username, passhash, dept, date_create)"+\
-                      "VALUES(%s,%s,%s,%s)"
-                val = (self.entUser.get().strip(),self.entPass.get().strip(),"USER",getTime)
+                sql = "INSERT INTO acct (username,passhash,email,dept,date_create)"+\
+                      "VALUES(%s,%s,%s,%s,%s)"
+                val = (self.entUser.get().strip(),self.entPass.get().strip(),self.entEmail.get(),"USER",getTime)
                 if (insert_data(sql,val)) == True:
                     messagebox.showinfo(title="Informasi", message="Data sudah di tersimpan.")
                     self.value = self.entUser.get()

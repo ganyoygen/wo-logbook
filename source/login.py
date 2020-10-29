@@ -56,7 +56,7 @@ class Login:
         if data != None : 
             user = data[1]
             password = data[2]
-            dept = data[3]
+            dept = data[4]
             # login username samakan saja menjadi lower
             if (str(self.entryUsername.get()).lower().strip() == user.lower()) \
                 and (str(self.entryPassword.get()) == password):
