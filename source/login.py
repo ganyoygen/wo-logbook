@@ -1,8 +1,10 @@
 import tkinter
-from socket_mysql import getdata_one
+import socket
+from socket_mysql import insert_data,getdata_one
 from tkinter import *
 from tkinter import ttk, messagebox
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
+from datetime import datetime
 from regacct import RegisterAcct
 from pwdhash import generate_hash,verify_password
 
@@ -58,13 +60,27 @@ class Login:
             password = data[2]
             dept = data[4]
             matchpw = verify_password(self.entryPassword.get(),password)
+            host_name = socket.gethostname() 
+            host_ip = socket.gethostbyname(host_name)
             # login username samakan saja menjadi lower
             if (str(self.entryUsername.get()).lower().strip() == user.lower()) \
                 and (matchpw == True):
-                root.destroy()
-                # import main
-                from main import start
-                start(user,dept)
+                if data[6] != True:
+                    messagebox.showerror(title="Belum Aktivasi", \
+                    message="Tidak dapat menggunakan program.\r\nsilahkan hubungi Administrator\r\nuntuk Aktivasi Departement.")
+                    return
+                if data[7] == True:
+                    messagebox.showerror(title="Account dikunci", \
+                    message="Tidak dapat menggunakan program.\r\nAccount anda telah dikunci.")
+                    return
+                sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s WHERE uid=%s"
+                val = (datetime.now(),host_name,host_ip,data[0])
+                if (insert_data(sql,val)) == True:
+                    root.destroy()
+                    # import main
+                    from main import start
+                    start(user,dept)
+                else: return
             elif (user==""):
                 self.entryUsername.focus_set()
             elif (password==""):
