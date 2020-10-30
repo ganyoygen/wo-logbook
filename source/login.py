@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 from regacct import RegisterAcct
+from pwdhash import generate_hash,verify_password
 
 root = ThemedTk(theme='aquativo')
 
@@ -52,14 +53,14 @@ class Login:
         sql = "SELECT * FROM acct WHERE username = %s"
         val = (self.entryUsername.get(),)
         data = getdata_one(sql,val)
-        print(data)
         if data != None : 
             user = data[1]
             password = data[2]
             dept = data[4]
+            matchpw = verify_password(self.entryPassword.get(),password)
             # login username samakan saja menjadi lower
             if (str(self.entryUsername.get()).lower().strip() == user.lower()) \
-                and (str(self.entryPassword.get()) == password):
+                and (matchpw == True):
                 root.destroy()
                 # import main
                 from main import start

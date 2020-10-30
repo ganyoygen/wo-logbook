@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `onprogress` (
 CREATE TABLE IF NOT EXISTS `acct` (
   `uid` int(11) NOT NULL auto_increment,
   `username` varchar(16) NOT NULL,
-  `passhash` varchar(20) NOT NULL,
+  `passhash` varchar(128) NOT NULL,
   `email` varchar(32) NOT NULL,
   `dept` varchar(20) NOT NULL,
   `date_create` datetime NOT NULL,

@@ -6,6 +6,7 @@ from tkcalendar import DateEntry
 from socket_mysql import insert_data,getdata_one
 from custom_entry import LimitEntry
 from datetime import datetime
+from pwdhash import generate_hash,verify_password
 
 class RegisterAcct(object):
     def __init__(self,parent):
@@ -98,9 +99,10 @@ class RegisterAcct(object):
                     message="Username yang diperbolehkan hanya kombinasi huruf dan angka")
                 self.entUser.focus_set()
             else:
+                storepw = generate_hash(self.entPass.get())
                 sql = "INSERT INTO acct (username,passhash,email,dept,date_create)"+\
                       "VALUES(%s,%s,%s,%s,%s)"
-                val = (self.entUser.get().strip(),self.entPass.get().strip(),self.entEmail.get(),"USER",getTime)
+                val = (self.entUser.get().strip(),storepw,self.entEmail.get(),"USER",getTime)
                 if (insert_data(sql,val)) == True:
                     messagebox.showinfo(title="Informasi", message="Data sudah di tersimpan.")
                     self.value = self.entUser.get()

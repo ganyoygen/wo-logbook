@@ -80,5 +80,5 @@ def start(user,dept):
     MainLog(root,user,dept)
 
 if __name__ == "__main__":
-    start("UkikLodom","ENG")
+    start("UkikLodom","ROOT")
     root.mainloop()
