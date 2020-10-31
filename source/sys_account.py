@@ -3,10 +3,10 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk,Toplevel,messagebox
 from tkcalendar import DateEntry
-from socket_mysql import insert_data,getdata_one
-from custom_entry import LimitEntry
 from datetime import datetime
-from pwdhash import generate_hash,verify_password
+from sys_mysql import insert_data,getdata_one
+from sys_pwhash import generate_hash,verify_password
+from custom_entry import LimitEntry
 
 class RegisterAcct(object):
     def __init__(self,parent):

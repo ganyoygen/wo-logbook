@@ -5,11 +5,10 @@ import datetime
 from tkinter import *
 from tkinter import ttk, messagebox
 from datetime import datetime
-# from socket_mysql import *
-from socket_mysql import read_db_config,getdata_all,getdata_one,insert_data
-from popup_date import PopupDateTime # popup set tgl jam
-from regacct import RemoveAcct
-from popup_date import GetSeconds
+# from sys_mysql import *
+from sys_mysql import read_db_config,getdata_all,getdata_one,insert_data
+from sys_date import PopupDateTime,GetSeconds 
+from sys_account import RemoveAcct
 
 
 kolomUser = ("UID","Username","Class","Date Created","Activated","Locked","Date Locked","Last Login","Last Host","Last IP")

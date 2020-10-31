@@ -1,14 +1,14 @@
 import tkinter
 import socket
 import time
-from socket_mysql import insert_data,getdata_one
 from tkinter import *
 from tkinter import ttk, messagebox
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 from datetime import datetime
-from regacct import RegisterAcct,RemoveAcct
-from pwdhash import generate_hash,verify_password
-from popup_date import GetSeconds,GetDuration
+from sys_mysql import insert_data,getdata_one
+from sys_account import RegisterAcct,RemoveAcct
+from sys_pwhash import generate_hash,verify_password
+from sys_date import GetSeconds,GetDuration
 
 root = ThemedTk(theme='aquativo')
 

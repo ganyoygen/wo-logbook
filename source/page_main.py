@@ -4,12 +4,11 @@ import os
 import csv # untuk write ke Excel
 import time
 import datetime
-
-from socket_mysql import read_db_config
-from popup_date import PopupDateTime, CustomDateEntry # custom date module
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
+from sys_mysql import read_db_config
+from sys_date import PopupDateTime, CustomDateEntry # custom date module
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
 
