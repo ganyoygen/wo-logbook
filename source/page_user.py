@@ -2,12 +2,15 @@ import tkinter as tk
 import mysql.connector
 import time
 import datetime
-# from socket_mysql import *
-from socket_mysql import read_db_config,getdata_all,getdata_one,insert_data
-from popup_date import PopupDateTime # popup set tgl jam
 from tkinter import *
 from tkinter import ttk, messagebox
 from datetime import datetime
+# from socket_mysql import *
+from socket_mysql import read_db_config,getdata_all,getdata_one,insert_data
+from popup_date import PopupDateTime # popup set tgl jam
+from regacct import RemoveAcct
+from popup_date import GetSeconds
+
 
 kolomUser = ("UID","Username","Class","Date Created","Activated","Locked","Date Locked","Last Login","Last Host","Last IP")
 
@@ -190,16 +193,25 @@ class UserMgmt(tk.Frame):
         self.tabelUser.column("Last Host", width=80,anchor="w")
         self.tabelUser.column("Last IP", width=80,anchor="w")
         
-        i=0
+        i=u=0
         for dat in results:
             if(i%2):
                 baris="genap"
             else:
                 baris="ganjil"
-            self.tabelUser.insert('', 'end', values=dat, tags=baris)
+            # checking temporary user for delete them
+            # dat[0] = uid, dat[3] = date_create, dat[4] = activated -lihat sql = ...
+            datetodrop = GetSeconds(str(dat[3])).value + 604800 # 86400*7 (7 hari). Lebih baik buat custom
+            if (dat[4] != True and (datetodrop - time.time()) <=0 and RemoveAcct(dat[0]).result == True):
+                # messagebox.showwarning(title="Account Info",message="Account Deleted successfully")
+                u+=1
+            else: # tampilkan user yang tidak di delete pada tabel
+                self.tabelUser.insert('', 'end', values=dat, tags=baris)
             i+=1
         self.tabelUser.tag_configure("ganjil", background="gainsboro")
         self.tabelUser.tag_configure("genap", background="floral white")
+        if u > 0: # berikan info jika ada username yang berhasil dihapus
+            messagebox.showwarning(title="Account Info",message="Ditemukan {} Account telah berhasil dihapus.".format(u))
 
     def selboxdept(self,event):
         if self.entDept.get() == "":

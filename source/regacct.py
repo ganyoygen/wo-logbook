@@ -104,7 +104,7 @@ class RegisterAcct(object):
                       "VALUES(%s,%s,%s,%s,%s)"
                 val = (self.entUser.get().strip(),storepw,self.entEmail.get(),"USER",getTime)
                 if (insert_data(sql,val)) == True:
-                    messagebox.showinfo(title="Informasi", message="Data sudah di tersimpan.")
+                    messagebox.showinfo(title="Account Info", message="Account registration is successful")
                     self.value = self.entUser.get()
                     self.top.destroy()
         else:
@@ -116,6 +116,14 @@ class RegisterAcct(object):
                 messagebox.showerror(title="Error",parent=self.top, \
                     message="User {} sudah terdaftar.\nSilahkan pilih yang lain".format(self.entUser.get()))
             self.entUser.focus_set()
+
+class RemoveAcct():
+    def __init__(self,uid):
+        sql = "DELETE FROM acct WHERE uid =%s"
+        val = (uid,)
+        self.result = False
+        if (insert_data(sql,val)) == True:
+            self.result = True
 
 class TestRun(object):
     def __init__(self,master):

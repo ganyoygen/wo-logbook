@@ -1,8 +1,31 @@
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk, Toplevel
 from tkcalendar import DateEntry
-import sys
+from datetime import datetime
+
+
+class GetSeconds():
+    def __init__(self,inputdate):
+        formatingdate = datetime.strptime(inputdate,'%Y-%m-%d %H:%M:%S')
+        self.value = datetime.timestamp(formatingdate)
+
+class GetDuration():
+    def __init__(self,seconds):
+        seconds_in_day = 60 * 60 * 24
+        seconds_in_hour = 60 * 60
+        seconds_in_minute = 60
+
+        days = seconds // seconds_in_day
+        hours = (seconds - (days * seconds_in_day)) // seconds_in_hour
+        minutes = (seconds - (days * seconds_in_day) - (hours * seconds_in_hour)) // seconds_in_minute
+        if hours <= 0:
+            self.value = "{} menit.".format(int(minutes))
+        elif days <= 0:
+            self.value = "{0} jam, {1} menit.".format(int(hours),int(minutes))
+        else:
+            self.value = "{0} hari, {1} jam, {2} menit.".format(int(days),int(hours),int(minutes))
 
 class CustomDateEntry(DateEntry):
     def _select(self, event=None):

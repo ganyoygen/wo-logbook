@@ -1,12 +1,14 @@
 import tkinter
 import socket
+import time
 from socket_mysql import insert_data,getdata_one
 from tkinter import *
 from tkinter import ttk, messagebox
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 from datetime import datetime
-from regacct import RegisterAcct
+from regacct import RegisterAcct,RemoveAcct
 from pwdhash import generate_hash,verify_password
+from popup_date import GetSeconds,GetDuration
 
 root = ThemedTk(theme='aquativo')
 
@@ -55,19 +57,28 @@ class Login:
         sql = "SELECT * FROM acct WHERE username = %s"
         val = (self.entryUsername.get(),)
         data = getdata_one(sql,val)
-        if data != None : 
+        if data != None :
+            uid = data[0]
             user = data[1]
             password = data[2]
             dept = data[4]
+            datecreate = GetSeconds(str(data[5]))
             matchpw = verify_password(self.entryPassword.get(),password)
             host_name = socket.gethostname() 
             host_ip = socket.gethostbyname(host_name)
             # login username samakan saja menjadi lower
             if (str(self.entryUsername.get()).lower().strip() == user.lower()) \
                 and (matchpw == True):
-                if data[6] != True:
+                if data[6] != True: # bagian ceking aktivasi + remove acct
+                    datetodrop = datecreate.value + 604800 # 86400*7 (7 hari). Lebih baik buat custom
+                    duration = GetDuration(datetodrop - time.time())
                     messagebox.showerror(title="Belum Aktivasi", \
-                    message="Tidak dapat menggunakan program.\r\nsilahkan hubungi Administrator\r\nuntuk Aktivasi Departement.")
+                    message="Tidak dapat menggunakan program.\r\nsilahkan hubungi Administrator\r\nuntuk Aktivasi Departement.\
+                        \r\n \
+                        \r\nSisa waktu: {}".format(duration.value))
+                    # bagian remove account
+                    if ((datetodrop - time.time()) <=0 and RemoveAcct(uid).result == True):
+                            messagebox.showwarning(title="Account Info",message="Account Deleted successfully")
                     return
                 if data[7] == True:
                     messagebox.showerror(title="Account dikunci", \
@@ -96,8 +107,9 @@ class Login:
     def regacct(self):
         regacct = RegisterAcct(self.parent)
         regacct.parent.wait_window(regacct.top)
-        self.entryUsername.delete(0,END)
-        self.entryUsername.insert(0,regacct.value)
+        if regacct.value != "":
+            self.entryUsername.delete(0,END)
+            self.entryUsername.insert(0,regacct.value)
 
 def main():
     Login(root, "Login Program")
