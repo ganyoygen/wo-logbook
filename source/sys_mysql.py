@@ -23,13 +23,11 @@ def read_db_config(filename=getfile, section='mysql'):
             db[item[0]] = item[1]
     else:
         raise Exception('{0} not found in the {1} file'.format(section, filename))
-
     return db
 
 def getdata_all(query,param):
     try:
-        db_config = read_db_config()
-        con = mysql.connector.connect(**db_config)
+        con = mysql.connector.connect(**read_db_config())
         cur = con.cursor()
         cur.execute(query, param)
         results = cur.fetchall()
@@ -42,8 +40,7 @@ def getdata_all(query,param):
 
 def getdata_one(query,param):
     try:
-        db_config = read_db_config()
-        con = mysql.connector.connect(**db_config)
+        con = mysql.connector.connect(**read_db_config())
         cur = con.cursor()
         cur.execute(query, param)
         results = cur.fetchone()
@@ -53,15 +50,10 @@ def getdata_one(query,param):
     except mysql.connector.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
-    # finally:
-    #     if (con.is_connected()):
-    #         cur.close()
-    #         con.close()
 
 def insert_data(query,param):
     try:
-        db_config = read_db_config()
-        con = mysql.connector.connect(**db_config)
+        con = mysql.connector.connect(**read_db_config())
         cur = con.cursor()
         cur.execute(query, param)
         return True

@@ -9,6 +9,7 @@ from sys_mysql import insert_data,getdata_one
 from sys_account import RegisterAcct,RemoveAcct
 from sys_pwhash import generate_hash,verify_password
 from sys_date import GetSeconds,GetDuration
+from sys_config import SetConfig
 
 root = ThemedTk(theme='aquativo')
 
@@ -17,7 +18,7 @@ class Login:
         self.parent = parent
         self.parent.title(title)
         self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
-        lebar=250
+        lebar=270
         tinggi=100
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
         setTengahY = (self.parent.winfo_screenheight()-tinggi)//2
@@ -25,8 +26,8 @@ class Login:
         self.aturKomponen()
         
     def aturKomponen(self):
-        ttk.Label(self.parent, text="Username").grid(row=0, column=0, sticky=W,padx=6)
-        ttk.Label(self.parent, text="Password").grid(row=1, column=0, sticky=W,padx=6)
+        ttk.Label(self.parent, text="Username").grid(row=0,column=0,sticky=W,padx=6,pady=6)
+        ttk.Label(self.parent, text="Password").grid(row=1,column=0,sticky=W,padx=6,pady=6)
 
         self.entryUsername = ttk.Entry(self.parent,width=17)
         self.entryUsername.grid(row=0, column=1,sticky=W)
@@ -36,18 +37,18 @@ class Login:
         self.entryPassword.grid(row=1, column=1,sticky=W)
         self.entryPassword.bind('<Return>', self.proses)
 
-        self.buttonLogin = ttk.Button(self.parent, text="Login", command=self.proses,\
-                             width=10)
-        self.buttonLogin.grid(row=2, column=1)
-
-        self.btnRegAcct = ttk.Button(self.parent, text="Register", command=self.regacct,\
-                             width=10)
-        self.btnRegAcct.grid(row=2, column=2)
+        ttk.Button(self.parent,text="ConfigDB",\
+            command=self.config_db,width=10).grid(row=2, column=0,padx=6)
+        ttk.Button(self.parent,text="Login",\
+            command=self.proses,width=10).grid(row=2, column=1,padx=6)
+        ttk.Button(self.parent,text="Register",\
+            command=self.regacct,width=10).grid(row=2, column=2,padx=6)
 
         self.entryUsername.focus_set()
 
     def keluar(self,event=None):
-        self.parent.destroy()
+        if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
+            self.parent.destroy()
 
     def letEntryPass(self,event=None):
         self.entryPassword.focus_set()
@@ -110,6 +111,10 @@ class Login:
         if regacct.value != "":
             self.entryUsername.delete(0,END)
             self.entryUsername.insert(0,regacct.value)
+
+    def config_db(self):
+        setconfig = SetConfig(self.parent)
+        setconfig.parent.wait_window(setconfig.top)
 
 def main():
     Login(root, "Login Program")
