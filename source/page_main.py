@@ -7,7 +7,7 @@ import datetime
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
-from sys_mysql import read_db_config
+from sys_mysql import read_db_config,getdata_one,insert_data
 from sys_date import PopupDateTime, CustomDateEntry # custom date module
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
@@ -271,44 +271,50 @@ class PageMain(tk.Frame):
         else : pass
 
     def checkwo(self,data):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
+        if (len(data) < 1): # Jika wo kosong
+            # print("Diterima, len data",len(data),"wo bisa kosong")
+            return data
+        elif (len(data) >= 1 and data.isdigit() == False):
+            # print("Ditolak, digit",data.isdigit())
+            return False
+        else:
+            # print("no awal",data)
+            while 0 < len(data): # jika ada "0" didepan hapus aja
+                if data[0] == '0':
+                    data = data[1:]
+                    continue
+                break
+            # print("no akhir",data)
             sql = ("SELECT * FROM logbook where no_wo LIKE %s")
-            cur.execute(sql,(data,))
-            hasil = cur.fetchone()
-            if cur.rowcount < 0:
-                    pass
-            else:
-                    if len(data) < 1: # Jika wo kosong
-                            return "terima" 
-                    if (data == hasil[1]):
-                            return "tolak"
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+            val = (data,)
+            hasil = getdata_one(sql,val)
+            if (hasil == None): # Jika wo no. baru
+                # print("diterima,",data,"!-",hasil)
+                return data
+            if (data == hasil[1]):
+                # print("ditolak,",data,"=",hasil[1])
+                return False
 
     def checkifca(self,data):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
+        if ((data[:2] != "BM") and (data[:2] != "TN")):
+            # print("bukan TIPE yang benar,",data[:2])
+            return False
+        elif (len(data) != 10):
+            # print("panjang =",len(data))
+            return False
+        elif (data[2:].isdigit() == False):
+            # print("8 char digit?",data[2:].isdigit())
+            return False
+        else:
             sql = ("SELECT * FROM logbook where no_ifca LIKE %s")
-            cur.execute(sql,(data,))
-            hasil = cur.fetchone()
-            if cur.rowcount < 0:
-                    pass
-            else:
-                    if (data.upper() == hasil[2].upper()):
-                            return "tolak"
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+            val = (data,)
+            hasil = getdata_one(sql,val)
+            if hasil == None:
+                # print("diterima,",data,"!-",hasil)
+                return True
+            if (data == hasil[2]):
+                # print("ditolak,",data,"=",hasil[2])
+                return False
 
     def checktgl(self,data):
         if len(str(data)) == 10:
@@ -680,49 +686,34 @@ class PageMain(tk.Frame):
         os.system("cls")
 
     def onSave(self):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-
-            cWo = self.entWo.get()
-            cIfca = self.entIfca.get()
-            cTglBuat = self.entTglbuat.get()
-            cJamBuat = self.entJambuat.get()
-            cUnit = self.entUnit.get()
-            cWorkReq = self.entWorkReq.get('1.0', 'end')
-            cStaff = self.entStaff.get()
-            cIfca = self.entIfca.get()
-            if self.checkwo(cWo) == "tolak": #check WO
-                    messagebox.showerror(title="Error", \
-                    message="Wo {} sudah terdaftar.".format(cWo))
-            elif len(cIfca.strip()) == 0:
-                    messagebox.showwarning(title="Peringatan",message="No IFCA Kosong.")
-                    self.entIfca.focus_set()
-                    self.entIfca.delete(0, END)
-            elif self.checktgl(cTglBuat) == None or len(cJamBuat.strip()) == 0: #check tgl jika kosong, batalkan save
-                    messagebox.showerror(title="Error",message="Format tanggal salah")
-            elif len(cUnit.strip()) == 0:
-                    messagebox.showwarning(title="Peringatan",message="Unit harus diisi.")
-                    self.entUnit.focus_set()
-                    self.entUnit.delete(0, END)
-            elif self.checkifca(cIfca) == "tolak": #check IFCA
-                    messagebox.showerror(title="Error", \
-                    message="{} sudah terdaftar.".format(cIfca))
-                    self.entIfca.focus_set()
-            else:
-                    cur = con.cursor()
-                    sql = "INSERT INTO logbook (no_wo, no_ifca, date_create, time_create, unit, work_req, staff)"+\
-                          "VALUES(%s,%s,%s,%s,%s,%s,%s)"
-                    cur.execute(sql,(cWo,cIfca.upper(),self.checktgl(cTglBuat),cJamBuat,cUnit.upper(),cWorkReq.strip(),cStaff.upper()))
-                    messagebox.showinfo(title="Informasi", \
-                                        message="Data sudah di tersimpan.")
-                    cur.close()
-                    self.onClear()
-            con.commit()
-            con.close()
-        except mysql.connector.Error as err:
+        cWo = self.checkwo(self.entWo.get()) # self.checkwo, jika salah return False
+        cIfca = self.entIfca.get() # self.checkifca, jika salah return False
+        cTglBuat = self.entTglbuat.get()
+        cJamBuat = self.entJambuat.get()
+        cUnit = self.entUnit.get()
+        cWorkReq = self.entWorkReq.get('1.0', 'end')
+        cStaff = self.entStaff.get()
+        cIfca = self.entIfca.get()
+        if cWo == False: #check WO
             messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+            message="WO sudah terdaftar atau Input WO salah")
+        elif self.checkifca(cIfca) == False: #check IFCA
+            messagebox.showerror(title="Error", \
+            message="IFCA sudah terdaftar atau Input IFCA salah")
+            self.entIfca.focus_set()
+        elif self.checktgl(cTglBuat) == None or len(cJamBuat.strip()) == 0: #check tgl jika kosong, batalkan save
+            messagebox.showerror(title="Error",message="Format tanggal salah")
+        elif len(cUnit.strip()) == 0:
+            messagebox.showwarning(title="Peringatan",message="Unit harus diisi.")
+            self.entUnit.focus_set()
+            self.entUnit.delete(0, END)
+        else:
+            sql = "INSERT INTO logbook (no_wo, no_ifca, date_create, time_create, unit, work_req, staff)"+\
+                  "VALUES(%s,%s,%s,%s,%s,%s,%s)"
+            val = (cWo,cIfca.upper(),self.checktgl(cTglBuat),cJamBuat,cUnit.upper(),cWorkReq.strip(),cStaff.upper())
+            if (insert_data(sql,val)) == True:
+                messagebox.showinfo(title="Informasi",message="Data sudah di tersimpan.")
+                self.onClear()
 
     def onUpdate(self):
         try:
