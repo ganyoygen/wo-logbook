@@ -9,7 +9,7 @@ from page_about import About
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 
 # root = Tk()
-root = ThemedTk(theme='blue')
+root = ThemedTk(theme='clearlooks')
 
 class WindowDraggable():
     def __init__(self, label):
@@ -36,7 +36,7 @@ class MainLog:
         self.parent = parent
         self.user = user
         self.dept = dept
-        self.parent.protocol("WM_DELETE_WINDOWS", self.keluar)
+        self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
         lebar=950
         tinggi=680
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
@@ -74,6 +74,7 @@ class MainLog:
         if self.dept != "ROOT": self.notebook.tab(2, state = 'disabled')
 
     def keluar(self,event=None):
+        print("Program has been closed.")
         self.parent.destroy()
 
 def start(user,dept):
@@ -83,5 +84,5 @@ def start(user,dept):
     MainLog(root,user,dept)
 
 if __name__ == "__main__":
-    start("UkikLodom","ROOT")
+    start("UkikLodom","ENG")
     root.mainloop()

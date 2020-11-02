@@ -16,7 +16,7 @@ class Login:
     def __init__(self,parent,title):
         self.parent = parent
         self.parent.title(title)
-        self.parent.protocol("WM_DELETE_WINDOWS", self.keluar)
+        self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
         lebar=250
         tinggi=100
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
