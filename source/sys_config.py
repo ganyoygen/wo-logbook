@@ -111,19 +111,19 @@ class SetConfig(object):
         try:
             con = mysql.connector.connect(**read_db_config())
             info = con.get_server_info()
-            messagebox.showinfo(title="Version",\
+            messagebox.showinfo(title="Version",parent=self.top,\
                 message="Connected to MySQL Server version {}".format(info))
             cur = con.cursor()
             cur.execute("select database();")
             record = cur.fetchone()
-            messagebox.showinfo(title="Database",\
+            messagebox.showinfo(title="Database",parent=self.top,\
                 message="You're connected to database: {}".format(record))
             cur.close()
             con.close()
-            messagebox.showinfo(title="Finish",\
+            messagebox.showinfo(title="Finish",parent=self.top,\
                 message="Checking finished, MySQL connection is closed")
         except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
+            messagebox.showerror(title="Error",parent=self.top,\
                 message="SQL Log: {}".format(err))
 
     def write_file(self):
