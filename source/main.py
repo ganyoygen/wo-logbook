@@ -9,7 +9,7 @@ from page_about import About
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 
 # root = Tk()
-root = ThemedTk(theme='clearlooks')
+root = ThemedTk(theme='scidblue')
 
 class WindowDraggable():
     def __init__(self, label):
@@ -84,5 +84,5 @@ def start(user,dept):
     MainLog(root,user,dept)
 
 if __name__ == "__main__":
-    start("UkikLodom","ENG")
+    start("UkikLodom","ROOT")
     root.mainloop()

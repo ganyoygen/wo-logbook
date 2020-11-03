@@ -14,7 +14,7 @@ judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action"
 
 class PageMain(tk.Frame):
     def __init__(self,parent,user,dept):
-        tk.Frame.__init__(self,parent)
+        ttk.Frame.__init__(self,parent)
         self.parent = parent
         self.user = user
         self.dept = dept
@@ -35,7 +35,7 @@ class PageMain(tk.Frame):
         self.botFrame = ttk.Frame(self)
         self.botFrame.pack(side=TOP, fill=X)
         footer = ttk.Frame(self)
-        footer.pack(side=TOP, fill=X)
+        footer.pack(side=BOTTOM, fill=X)
         
         ttk.Label(self.topFrame, text='').grid(row=0, column=0)
         ttk.Label(self.midFrame, text='').grid(row=0, column=0)

@@ -15,7 +15,7 @@ kolomUser = ("UID","Username","Class","Date Created","Activated","Locked","Date 
 
 class UserMgmt(tk.Frame):
     def __init__(self,parent,user,dept):
-        tk.Frame.__init__(self, parent)
+        ttk.Frame.__init__(self, parent)
         self.parent = parent
         self.user = user
         self.dept = dept
