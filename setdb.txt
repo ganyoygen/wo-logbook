@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `logbook` (
   `date_create` date NOT NULL,
   `unit` varchar(12) NOT NULL,
   `work_req` varchar(512) NOT NULL,
-  `staff` varchar(16) NOT NULL,
+  `staff` varchar(64) NOT NULL,
   `work_act` varchar(10240) NOT NULL,
   `date_done` date NOT NULL,
   `time_done` varchar(10) NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `onprogress` (
   `no_ifca` varchar(10) NOT NULL,
   `date_update` datetime NOT NULL,
   `commit_update` varchar(512) NOT NULL,
-  `auth_by` varchar(16) NOT NULL,
+  `auth_by` varchar(64) NOT NULL,
   `auth_login` varchar(16) NOT NULL,
   `auth_dept` varchar(32) NOT NULL,
   PRIMARY KEY (`id`)

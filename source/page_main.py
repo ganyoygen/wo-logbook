@@ -3,12 +3,13 @@ import mysql.connector
 import os
 import csv # untuk write ke Excel
 import time
-import datetime
+# import datetime
+from datetime import date,datetime
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
-from sys_mysql import read_db_config,getdata_one,insert_data
-from sys_date import PopupDateTime, CustomDateEntry # custom date module
+from sys_mysql import read_db_config,getdata_one,getdata_all,insert_data
+from sys_date import PopupDateTime,CustomDateEntry,store_date,get_date
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
 
@@ -243,7 +244,8 @@ class PageMain(tk.Frame):
             self.btnDelete.config(state="disable")
             self.btnReceived.config(state="disable")
             self.btnUpdate.config(state="disable")
-
+            self.rbtnTN.grid(row=0, column=0,sticky=W)
+            self.rbtnBM.grid(row=0, column=2,sticky=W)
             # A. readonly aja, input pake popup
             self.entTglbuat.config(state="readonly")
             self.entJambuat.config(state="readonly")
@@ -267,6 +269,8 @@ class PageMain(tk.Frame):
             self.entJamdone.config(state="readonly")
             self.entRecBy.config(state="readonly")
             self.entRecDate.config(state="readonly")
+            self.rbtnTN.grid_forget()
+            self.rbtnBM.grid_forget()
         # 1 #
         else : pass
 
@@ -316,15 +320,6 @@ class PageMain(tk.Frame):
                 # print("ditolak,",data,"=",hasil[2])
                 return False
 
-    def checktgl(self,data):
-        if len(str(data)) == 10:
-                cHari = str(data)[0:2]
-                cBulan = str(data)[3:5]
-                cTahun = str(data)[6:]
-                return datetime.date(int(cTahun),int(cBulan),int(cHari))
-        else:
-                return None
-
     def boxsearchsel(self,event):
         if self.opsicari.get() == "Tanggal":
             self.entCari.delete(0, END)
@@ -337,40 +332,25 @@ class PageMain(tk.Frame):
             self.dateEnd.grid_forget()
             self.entCari.grid(row=2, column=2,sticky=W)
 
-    def search_data(self,opsi,data):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            cur.execute(opsi, data)
-            results = cur.fetchall()
-            print('---',cur.rowcount,'ditemukan ---')
-            cur.close()
-            con.close()
-            self.showtable(results)
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err)) 
-
     def onSearch(self):
         self.entrySet("mainclear")
         self.opsiStatus.current(0)
         self.querySearch() # set dulu variabel self.sql dan self.val
-        self.search_data(self.sql,self.val)
+        results = getdata_all(self.sql,self.val)
+        self.showtable(results)
 
     def querySearch(self):
         opsi = self.opsicari.get()
         cari = self.entCari.get()
         if opsi == "Tanggal":
             if self.dateStart.get() == self.dateEnd.get():
-                cari = self.checktgl(self.dateStart.get())
-                self.sql = "SELECT * FROM logbook WHERE date_create LIKE %s ORDER BY date_create DESC"
+                cari = store_date(self.dateStart.get())
+                self.sql = "SELECT * FROM logbook WHERE date_create LIKE %s ORDER BY time_create DESC"
                 self.val = ("%{}%".format(cari),)
             else: #part jika search between date
-                # self.sql = "SELECT * FROM logbook WHERE (date_create BETWEEN '2019-12-31 00:00:00' AND '2020-10-31 00:00:00')"
-                sdate = self.checktgl(self.dateStart.get())
-                edate = self.checktgl(self.dateEnd.get())
-                self.sql = "SELECT * FROM logbook WHERE (date_create BETWEEN %s AND %s)"
+                sdate = store_date(self.dateStart.get())
+                edate = store_date(self.dateEnd.get())
+                self.sql = "SELECT * FROM logbook WHERE (date_create BETWEEN %s AND %s) ORDER BY date_create DESC"
                 self.val = ('{}'.format(sdate),'{}'.format(edate))
         elif opsi == "IFCA":
             self.sql = "SELECT * FROM logbook WHERE no_ifca LIKE %s ORDER BY no_ifca DESC"
@@ -382,8 +362,8 @@ class PageMain(tk.Frame):
             self.sql = "SELECT * FROM logbook WHERE work_req LIKE %s ORDER BY date_create DESC"
             self.val = ("%{}%".format(cari),)
         else: pass
-
-    def auto_wo(self):
+#pr cek juga mengenai auth_
+    def auto_wo(self): #pr optimization
         try:
             db_config = read_db_config()
             con = mysql.connector.connect(**db_config)
@@ -416,7 +396,7 @@ class PageMain(tk.Frame):
             messagebox.showerror(title="Error", \
                 message="SQL Log: {}".format(err))
 
-    def auto_ifca(self):
+    def auto_ifca(self): #pr optimization
         try:
             tipe = str(self.btnselect.get())
             db_config = read_db_config()
@@ -470,7 +450,7 @@ class PageMain(tk.Frame):
         self.tabelIfca.tag_configure("ganjil", background="gainsboro")
         self.tabelIfca.tag_configure("genap", background="floral white")                              
 
-    def onMainExport(self):
+    def onMainExport(self): #pr optimization
         self.querySearch() # set dulu variabel sql dan val
         try:
             db_config = read_db_config()
@@ -543,29 +523,18 @@ class PageMain(tk.Frame):
 
     def doReceive(self,data):
         receiver = self.user + "." + self.dept
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            setreceived = True
-            from datetime import datetime
-            tsekarang = datetime.now()
-            sql = "UPDATE logbook SET date_received=%s,received=%s,wo_receiver=%s WHERE no_ifca =%s"
-            cur.execute(sql,(tsekarang,setreceived,receiver,data))
-            self.onSearch() #update received sesuai tabel yg dicari
+        tsekarang = datetime.now()
+        sql = "UPDATE logbook SET date_received=%s,received=%s,wo_receiver=%s WHERE no_ifca =%s"
+        val = (tsekarang,True,receiver,data)
+        if (insert_data(sql,val)) == True:
             # messagebox.showinfo(title="Informasi", \
-            #             message="Wo {} sudah diterima.".format(data))
-            con.commit()
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+            # message="Wo {} sudah diterima.".format(data))
+            self.onSearch() #update received sesuai tabel yg dicari
 
     def mainlog_detail(self, event):
         try:
             curItem = self.tabelIfca.item(self.tabelIfca.focus())
-            ifca_value = curItem['values'][1]  
+            ifca_value = curItem['values'][1]
             self.entrySet("mainclear")
             self.entrySet("disablebtn")
             if self.dept == "ROOT": self.btnDelete.config(state="normal")
@@ -573,42 +542,20 @@ class PageMain(tk.Frame):
             self.entJambuat.config(state="normal")
             self.entTgldone.config(state="normal")
             self.entJamdone.config(state="normal")
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            # sql = "SELECT no_wo, no_ifca, date_create, unit, work_req, staff, date_done, time_done, work_act, time_create, status_ifca FROM logbook WHERE no_ifca = %s"
             sql = "SELECT * FROM logbook WHERE no_ifca = %s"
-            cur.execute(sql,(ifca_value,))
-            data = cur.fetchone()
+            val = (ifca_value,)
+            data = getdata_one(sql,val)
             self.entIfca.insert(END, ifca_value)
             self.entWo.insert(END, data[1])
-            #TGL buat
-            self.entTglbuat.insert(END, data[3])
-            getTgl = self.entTglbuat.get() #dari mysql YYYY-MM-DD
-            #balikin menjadi DD-MM-YYYY
-            showtgl = str(getTgl)[8:] +'-'+ str(getTgl)[5:7] +'-'+ str(getTgl)[:4]
-            self.entTglbuat.delete(0, END)
-            self.entTglbuat.insert(END, showtgl)
+            self.entTglbuat.insert(END,get_date(str(data[3])))
             self.entJambuat.insert(END, data[13])
-            # self.entJambuat.insert(END, str(data[13])[:2]+str(data[13])[3:])
             self.entUnit.insert(END, data[4])
             self.entWorkReq.insert(END, data[5])
             self.entStaff.insert(END, data[6])
-            #TGL done
-            try: 
-                self.entTgldone.insert(END, data[8])
-                getTgldone = self.entTgldone.get() #dari mysql YYYY-MM-DD
-                #balikin menjadi DD-MM-YYYY
-                showtgldone = str(getTgldone)[8:] + '-' + str(getTgldone)[5:7] +'-' + str(getTgldone)[:4]
-                self.entTgldone.delete(0, END)
-                self.entTgldone.insert(END, showtgldone)
-            except: pass
+            self.entTgldone.insert(END,get_date(str(data[8])))
             self.entJamdone.insert(END, data[9])
             self.entWorkAct.insert(END, data[7])
-            try: 
-                showdate = str(data[12])[8:10] + '-' + str(data[12])[5:7] +'-' + str(data[12])[:4]+' '+str(data[12])[11:]
-                self.entRecDate.insert(END, showdate)
-            except: pass
+            self.entRecDate.insert(END,get_date(str(data[12])))
             self.entRecBy.insert(END, data[11])
             if data[14] == "DONE":
                 self.opsiStatus.current(1)
@@ -629,36 +576,24 @@ class PageMain(tk.Frame):
             if data[10] == True and ifca_value[:2] == "TN":
                 # tidak dapat receive wo TN karena sudah direceive
                 self.btnReceived.config(state="disable")
-            
             # read only setelah entry terisi
             self.entrySet("mainreadifca")
-            cur.close()
-            con.close()
         except:
             print('Tidak ada data di tabel')
 
     def onDelete(self):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            self.entWo.config(state="normal")
-            cIfca = self.entIfca.get()
-            if messagebox.askokcancel('Delete Data','WO dengan no {} akan dihapus?'.format(cIfca)) == True:
-                sqlmain = "DELETE FROM logbook WHERE no_ifca =%s"
-                cur.execute(sqlmain,(cIfca,))
-                sqlprog = "DELETE FROM onprogress WHERE no_ifca =%s"
-                cur.execute(sqlprog,(cIfca,))
-                self.onSearch() #update received sesuai tabel yg dicari
-                messagebox.showinfo(title="Delete {}".format(cIfca), \
-                                    message="Data sudah di hapus.")
-            else: pass
-            con.commit()
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+        cIfca = self.entIfca.get()
+        if messagebox.askokcancel('Delete Data','WO dengan no {} akan dihapus?'.format(cIfca)) == True:
+            sql = "DELETE FROM logbook WHERE no_ifca =%s"
+            val = (cIfca,)
+            if (insert_data(sql,val)) == True:
+                sql = "DELETE FROM onprogress WHERE no_ifca =%s"
+                val = (cIfca,)
+                if (insert_data(sql,val)) == True:
+                    self.onSearch() #update received sesuai tabel yg dicari
+                    messagebox.showinfo(title="Delete {}".format(cIfca), \
+                            message="Data sudah di hapus.")
+        else: pass
 
     def onClear(self):
         self.entrySet("disablebtn")
@@ -676,7 +611,6 @@ class PageMain(tk.Frame):
         # list wo hari ini
         self.opsicari.current(1)
         self.boxsearchsel(None)
-        from datetime import date
         today = date.today()
         self.dateStart.insert(END,today.strftime("%d-%m-%Y"))
         self.dateEnd.insert(END,today.strftime("%d-%m-%Y"))
@@ -687,12 +621,12 @@ class PageMain(tk.Frame):
 
     def onSave(self):
         cWo = self.checkwo(self.entWo.get()) # self.checkwo, jika salah return False
-        cIfca = self.entIfca.get() # self.checkifca, jika salah return False
+        cIfca = self.entIfca.get()
         cTglBuat = self.entTglbuat.get()
         cJamBuat = self.entJambuat.get()
-        cUnit = self.entUnit.get()
-        cWorkReq = self.entWorkReq.get('1.0', 'end')
-        cStaff = self.entStaff.get()
+        cUnit = self.entUnit.get().upper().strip()
+        cWorkReq = self.entWorkReq.get('1.0', 'end').upper().strip()
+        cStaff = self.entStaff.get().upper().strip()
         cIfca = self.entIfca.get()
         if cWo == False: #check WO
             messagebox.showerror(title="Error", \
@@ -701,99 +635,94 @@ class PageMain(tk.Frame):
             messagebox.showerror(title="Error", \
             message="IFCA sudah terdaftar atau Input IFCA salah")
             self.entIfca.focus_set()
-        elif self.checktgl(cTglBuat) == None or len(cJamBuat.strip()) == 0: #check tgl jika kosong, batalkan save
+        elif store_date(cTglBuat) == None or len(cJamBuat.strip()) == 0: #check tgl jika kosong, batalkan save
             messagebox.showerror(title="Error",message="Format tanggal salah")
-        elif len(cUnit.strip()) == 0:
+        elif len(cUnit) == 0:
             messagebox.showwarning(title="Peringatan",message="Unit harus diisi.")
             self.entUnit.focus_set()
             self.entUnit.delete(0, END)
         else:
             sql = "INSERT INTO logbook (no_wo, no_ifca, date_create, time_create, unit, work_req, staff)"+\
                   "VALUES(%s,%s,%s,%s,%s,%s,%s)"
-            val = (cWo,cIfca.upper(),self.checktgl(cTglBuat),cJamBuat,cUnit.upper(),cWorkReq.strip(),cStaff.upper())
+            val = (cWo,cIfca.upper(),store_date(cTglBuat),cJamBuat,cUnit,cWorkReq,cStaff)
             if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Informasi",message="Data sudah di tersimpan.")
                 self.onClear()
 
     def onUpdate(self):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            #panel kiri
-            cWo = self.entWo.get()
-            cIfca = self.entIfca.get()
-            getTglBuat = self.checktgl(self.entTglbuat.get()) #check tgl dulu
-            cWorkReq = self.entWorkReq.get('1.0', 'end')
-            cStaff = self.entStaff.get()
-            cStatus = self.opsiStatus.get()
-            from datetime import datetime
-            getTimeAcc = datetime.now()
-            
-            #panel kanan
-            cWorkAct = self.entWorkAct.get('1.0', 'end')
-            jamdone = self.entJamdone.get()
-            getTglDone = self.checktgl(self.entTgldone.get()) #check tgl dulu
-            #eksekusi sql
-            if len(cWorkReq.strip()) <= 0:
-                messagebox.showwarning(title="Peringatan",message="Work Request harus diisi.")
-                self.entWorkReq.focus_set()
-                self.entWorkReq.delete('1.0', 'end')
+        #panel kiri
+        cWo = self.entWo.get()
+        cIfca = self.entIfca.get()
+        cTglBuat = store_date(self.entTglbuat.get()) #check tgl dulu
+        cWorkReq = self.entWorkReq.get('1.0', 'end').upper().strip()
+        cStaff = self.entStaff.get().upper().strip()
+        cStatus = self.opsiStatus.get()
+        cTimeAcc = datetime.now()
+        #panel kanan
+        cWorkAct = self.entWorkAct.get('1.0', 'end').upper().strip()
+        cTglDone = store_date(self.entTgldone.get()) #check tgl dulu
+        jamdone = self.entJamdone.get()
+        #eksekusi sql
+        if len(cWorkReq) <= 0:
+            messagebox.showwarning(title="Peringatan",message="Work Request harus diisi.")
+            self.entWorkReq.focus_set()
+            self.entWorkReq.delete('1.0', 'end')
+            return # stop aja karena cWorkAct tidak diisi
+        if cStatus == "DONE":
+            if len(cStaff) <= 0: 
+                messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
+                self.entStaff.focus_set()
+                self.entStaff.delete(0, END)
+                return # stop aja karena cStaff tidak diisi
+            elif len(cWorkAct) <= 0:
+                messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
+                self.entWorkAct.focus_set()
+                self.entWorkAct.delete('1.0', 'end')
                 return # stop aja karena cWorkAct tidak diisi
-            if cStatus == "DONE":
-                if len(cStaff.strip()) <= 0: 
-                    messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
-                    self.entStaff.focus_set()
-                    self.entStaff.delete(0, END)
-                    return # stop aja karena cStaff tidak diisi
-                elif len(cWorkAct.strip()) <= 0:
-                    messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
-                    self.entWorkAct.focus_set()
-                    self.entWorkAct.delete('1.0', 'end')
-                    return # stop aja karena cWorkAct tidak diisi
-                elif getTglDone == None or len(jamdone.strip()) == 0:
-                    messagebox.showwarning(title="Peringatan",message="Tanggal harus diisi.")
-                    return # stop aja karena tanggal tidak diisi
-                else : pass
-            elif cStatus == "PENDING":
-                getTglDone = None
-                jamdone = None
-                if len(cStaff.strip()) <= 0: 
-                    messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
-                    self.entStaff.focus_set()
-                    self.entStaff.delete(0, END)
-                    return # stop aja karena cStaff tidak diisi
-                elif len(cWorkAct.strip()) <= 0: 
-                    messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
-                    self.entWorkAct.focus_set()
-                    self.entWorkAct.delete('1.0', 'end')
-                    return # stop aja karena cWorkAct tidak diisi
-                else: ### jgn eksekusi sekarang mungkin?
-                    sql1 = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login)"+\
-                    "VALUES(%s,%s,%s,%s,%s)"
-                    cur.execute(sql1,(cIfca,getTimeAcc,cWorkAct.strip(),cStaff.upper(),""))
-            elif cStatus == "CANCEL":
-                getTglDone = None
-                jamdone = None
-                if len(cWorkAct.strip()) <= 0: 
-                    messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
-                    self.entWorkAct.focus_set()
-                    self.entWorkAct.delete('1.0', 'end')
-                    return # stop aja karena cWorkAct tidak diisi
-            else : # UPDATE tidak perlu tanggal
-                getTglDone = None
-                jamdone = None
+            elif cTglDone == None or len(jamdone.strip()) == 0:
+                messagebox.showwarning(title="Peringatan",message="Tanggal harus diisi.")
+                return # stop aja karena tanggal tidak diisi
+            else : pass
+        elif cStatus == "PENDING":
+            cTglDone = None
+            jamdone = None
+            if len(cStaff) <= 0: 
+                messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
+                self.entStaff.focus_set()
+                self.entStaff.delete(0, END)
+                return # stop aja karena cStaff tidak diisi
+            elif len(cWorkAct) <= 0: 
+                messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
+                self.entWorkAct.focus_set()
+                self.entWorkAct.delete('1.0', 'end')
+                return # stop aja karena cWorkAct tidak diisi
+            else: ### jgn eksekusi sekarang mungkin?
+                sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login)"+\
+                "VALUES(%s,%s,%s,%s,%s)"
+                val = (cIfca,cTimeAcc,cWorkAct,cStaff,"")
+                print("Pending store data,",insert_data(sql,val))
+        elif cStatus == "CANCEL":
+            cTglDone = None
+            jamdone = None
+            if len(cWorkAct) <= 0: 
+                messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
+                self.entWorkAct.focus_set()
+                self.entWorkAct.delete('1.0', 'end')
+                return # stop aja karena cWorkAct tidak diisi
+        else : # UPDATE tidak perlu tanggal
+            cTglDone = None
+            jamdone = None
+        curItem = self.tabelIfca.item(self.tabelIfca.focus())
+        if cWorkReq == curItem['values'][4] and \
+            cStaff == curItem['values'][5] and cWorkAct == curItem['values'][6]:
+            print("Tidak ada aktivitas perubahan")
+        else:
             sql = "UPDATE logbook SET no_wo=%s,no_ifca=%s,date_create=%s,work_req=%s,staff=%s,status_ifca=%s,date_done=%s,time_done=%s,work_act=%s WHERE no_ifca =%s"
-            cur.execute(sql,(cWo,cIfca,getTglBuat,cWorkReq.strip(),cStaff.upper(),cStatus,getTglDone,jamdone,cWorkAct.strip(),cIfca))
-            messagebox.showinfo(title="Informasi", \
+            val = (cWo,cIfca,cTglBuat,cWorkReq,cStaff,cStatus,cTglDone,jamdone,cWorkAct,cIfca)
+            if (insert_data(sql,val)) == True:
+                messagebox.showinfo(title="Informasi", \
                     message="Data sudah di terupdate.")
-            con.commit()
-            cur.close()
-            con.close()
-            self.onSearch()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+                self.onSearch()
 
     def onDateCreate(self):
         setdate = PopupDateTime(self.parent)

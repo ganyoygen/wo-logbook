@@ -5,6 +5,40 @@ from tkinter import ttk, Toplevel
 from tkcalendar import DateEntry
 from datetime import datetime
 
+def store_date(inputdate):
+    inputdate = inputdate.replace('/','-')
+    if len(str(inputdate)) == 16:
+        vdate, vtime = inputdate.split() #pisah tanggal dan jam
+        try:
+            dt = datetime.strptime(vdate,'%d-%m-%Y')
+            # print ('{0}-{1}-{2:02} {3}'.format(dt.year,dt.month,dt.day,vtime))
+            return '{0}-{1}-{2:02} {3}'.format(dt.year,dt.month,dt.day,vtime)
+        except: return None
+    elif len(str(inputdate)) == 10:
+        try:
+            dt = datetime.strptime(inputdate,'%d-%m-%Y')
+            # print ('{0}-{1}-{2:02}'.format(dt.month, dt.day, dt.year % 100))
+            return '{0}-{1}-{2:02}'.format(dt.year,dt.month,dt.day)
+        except: return None
+    else:
+        return None
+
+def get_date(inputdate):
+    # return string
+    inputdate = inputdate.replace('/','-')
+    if len(str(inputdate)) == 19:
+        vdate, vtime = inputdate.split() #pisah tanggal dan jam
+        try:
+            dt = datetime.strptime(vdate,'%Y-%m-%d')
+            return '{0:02}-{1}-{2} {3}'.format(dt.day,dt.month,dt.year,vtime)
+        except: return ""
+    elif len(str(inputdate)) == 10:
+        try:
+            dt = datetime.strptime(inputdate,'%Y-%m-%d')
+            return '{0:02}-{1}-{2}'.format(dt.day,dt.month,dt.year)
+        except: return ""
+    else:
+        return ""
 
 class GetSeconds():
     def __init__(self,inputdate):
