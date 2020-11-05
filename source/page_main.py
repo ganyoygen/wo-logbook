@@ -450,50 +450,56 @@ class PageMain(tk.Frame):
         self.tabelIfca.tag_configure("ganjil", background="gainsboro")
         self.tabelIfca.tag_configure("genap", background="floral white")                              
 
-    def onMainExport(self): #pr optimization
-        self.querySearch() # set dulu variabel sql dan val
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            cur.execute(self.sql,self.val)
-            results = cur.fetchall()
-            if len(results) <= 0:
-                cur.close()
-                con.close()
-                return # stop aja karena kosong
-        
+    def onMainExport(self): #export from treeview results
+        results = self.tabelIfca.get_children() # dalam format [list]
+        if len(results) > 0:
+            #for testing export
+            # i=1
+            # for dat in results:
+            #     value = self.tabelIfca.item(dat)['values']
+            #     value.insert(0,i) # tambah nomor colom pertama
+            #     print(value)
+            #     value.insert(4,value.pop(13)) # pindahin jambuat ke kolom 4
+            #     print(value)
+            #     i+=1
+            # end testing 
+
             directory = filedialog.asksaveasfilename(initialdir = os.getcwd(), \
                 initialfile = self.entCari.get(), \
                 defaultextension='.csv', \
                 title="Save file Export", \
                 filetypes=[("Excel CSV", "*.csv"),("All", "*.*")])
+            if not directory:
+                print("cancel export")
+                return
             try:
                 filename=open(directory,'w',newline='')
             except:
-                cur.close()
-                con.close()
-                print("export aborted by user")
+                messagebox.showerror(title="Export File Error", \
+                    message="Permission denied: {}".format(directory))
                 return
             cWrite=csv.writer(filename)
-            cWrite.writerow(["Index","No WO","No IFCA","Tanggal Buat","Unit",\
-                    "Work Request","Staff","Work Action","Tanggal Selesai",\
-                    "Jam Selesai","Diterima","Penerima","Tanggal Diterima",\
-                    "Jam Buat","Status WO"])
-            i=0
+            # cWrite.writerow("Export time","",get_date(datetime.now()))
+            cWrite.writerow(["Export time","",datetime.now()])
+            cWrite.writerow([""])
+            cWrite.writerow(["Index","No WO","No IFCA","Tanggal Buat","Jam Buat",\
+                    "Unit","Work Request","Staff","Work Action","Tanggal Selesai",\
+                    "Jam Selesai","Status WO","Diterima","Penerima","Tanggal Diterima"])
+            i=1
             for dat in results:
-                cWrite.writerow(dat)
+                value = self.tabelIfca.item(dat)['values']
+                value.insert(0,i) # tambah nomor colom pertama
+                value.insert(4,value.pop(13)) # pindahin jambuat ke kolom 4
+                value.insert(11,value.pop(14)) # pindahin status ke kolom 11
+                cWrite.writerow(value)
                 i+=1
-            cWrite.writerow(["Save to",directory,str(i),"record(s)"])
+            cWrite.writerow([""])
+            cWrite.writerow(["Save to",directory])
+            cWrite.writerow(["Finish",len(results),"record(s)"])
             filename.close()
-            cur.close()
-            con.close()
             messagebox.showinfo(title="Export File", \
                 message="Sudah tersimpan di: {}".format(directory))
-
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+        else: print("result:",len(results))
 
     def onReceived(self):
         # try:
