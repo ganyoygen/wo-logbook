@@ -1,5 +1,4 @@
 import tkinter as tk
-import mysql.connector
 import os
 import csv # untuk write ke Excel
 import time
@@ -8,7 +7,7 @@ from datetime import date,datetime
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
-from sys_mysql import read_db_config,getdata_one,getdata_all,insert_data
+from sys_mysql import getdata_one,getdata_all,insert_data
 from sys_date import PopupDateTime,CustomDateEntry,store_date,get_date
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
@@ -363,64 +362,40 @@ class PageMain(tk.Frame):
             self.val = ("%{}%".format(cari),)
         else: pass
 #pr cek juga mengenai auth_
-    def auto_wo(self): #pr optimization
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            sql = "SELECT no_wo FROM logbook"
-            cur.execute(sql)
-            hasil = cur.fetchall() # buat dulu daftar wo
+    def auto_wo(self):
+        sql = "SELECT no_wo FROM logbook"
+        val = ()
+        hasil = getdata_all(sql,val) # list wo dalam tupple
+        if len(hasil) <= 0: # prevent error jika belum ada data
+            hasil = "0"
+        lastwo = hasil[len(hasil)-1][0] # ambil last wo dari tupple terakhir dan ambil datanya
+        print("last Wo:",lastwo)
+        print("Jumlah Wo:",len(hasil)) # Jumlah wo didapat
+        if lastwo == "": newWoNum = "" # prevent error, ketika IFCA terakhir tanpa no. WO (blank)
+        else: newWoNum = (int(lastwo)+1) # cari wo, + 1
+        print("Get new Wo:",newWoNum)
+        self.entWo.delete(0, END)
+        if len(str(newWoNum)) <= 6:
+            self.entWo.insert(0, newWoNum)
+            self.entIfca.focus_set()
+        else:
+            messagebox.showwarning(title="Peringatan", \
+                    message="maaf lebar data untuk no WO hanya sampai 6 digit")
 
-            if len(hasil) <= 0: # prevent error jika belum ada data
-                    hasil = "0"
-
-            lastwo = hasil[len(hasil)-1] # Max num wo terakhir
-            print("Jumlah Wo:",len(hasil)) # Jumlah wo didapat
-            try: # prevent error, ketika IFCA terakhir tanpa no. WO (blank)
-                newWoNum = (int(max(lastwo))+1) # cari wo, + 1
-                getNewWo = str(newWoNum) # Wo baru siap dipakai
-                print("Get new Wo:",getNewWo)
-                self.entWo.delete(0, END)
-                if len(str(getNewWo)) <= 6:
-                    self.entWo.insert(0, getNewWo)
-                    self.entIfca.focus_set()
-                else:
-                    messagebox.showwarning(title="Peringatan", \
-                            message="maaf lebar data untuk no WO hanya sampai 6 digit")
-                self.entWo.config(state="normal")
-                cur.close()
-                con.close()
-            except: pass
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
-
-    def auto_ifca(self): #pr optimization
-        try:
-            tipe = str(self.btnselect.get())
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            sql = "SELECT no_ifca FROM logbook WHERE no_ifca LIKE %s"
-            val = ("%{}%".format(tipe),)
-            cur.execute(sql, val)
-            hasil = cur.fetchall()
-            # for get in hasil:  
-                    # ifcalist = [get] # buat dulu daftar ifca
-            lastifca = max(hasil) # Max num ifca terakhir
-            print("Jumlah IFCA:",len(hasil)) # Jumlah ifca didapat
-            newIfcaNum = (int(max(lastifca)[2:])+1) # cari lastifca, hapus tipe(BM/TN) + 1
-            getNewIfca = tipe+str(newIfcaNum) # Ifca baru siap dipakai
-            print("Get new ifca:",getNewIfca) 
-            self.entIfca.delete(0, END)
-            self.entIfca.insert(0,getNewIfca)
-            self.entIfca.config(state="normal")
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
+    def auto_ifca(self):
+        tipe = str(self.btnselect.get())
+        sql = "SELECT MAX(no_ifca) FROM logbook WHERE no_ifca LIKE %s"
+        val = ("%{}%".format(tipe),)
+        hasil = getdata_all(sql,val) # max IFCA dalam tupple
+        lastifca = hasil[len(hasil)-1][0] # Max num ifca terakhir
+        print("Last IFca:",lastifca)
+        if lastifca == None: # prevent error jika belum ada data
+            lastifca = "XX10000000"
+        newIfcaNum = (int(lastifca[2:])+1) # cari lastifca, hapus tipe(BM/TN) + 1
+        getNewIfca = tipe+str(newIfcaNum) # Ifca baru siap dipakai
+        print("Get new ifca:",getNewIfca) 
+        self.entIfca.delete(0, END)
+        self.entIfca.insert(0,getNewIfca)
 
     def showtable(self,data):
         self.tabelIfca.delete(*self.tabelIfca.get_children()) #refresh, hapus dulu tabel lama
@@ -450,7 +425,7 @@ class PageMain(tk.Frame):
         self.tabelIfca.tag_configure("ganjil", background="gainsboro")
         self.tabelIfca.tag_configure("genap", background="floral white")                              
 
-    def onMainExport(self): #export from treeview results
+    def onMainExport(self): #export from database treeview
         results = self.tabelIfca.get_children() # dalam format [list]
         if len(results) > 0:
             #for testing export
@@ -766,3 +741,17 @@ class PageMain(tk.Frame):
         else: 
             # output kosong, batalkan perintah
             pass
+
+def testrun(user,dept):
+    notebook = ttk.Notebook(root) # lihat, self.parent = root
+    notebook.pack(fill="both", expand=True)
+    notebook.add(PageMain(notebook,user,dept), text="Main")
+    root.title("Project Logbook by GanyoyGen")
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.mainloop()
+
+if __name__ == "__main__":
+    from ttkthemes import ThemedTk
+    root = ThemedTk(theme='scidblue')
+    testrun("UkikLodom","ENG")
+    
