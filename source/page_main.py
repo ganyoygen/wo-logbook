@@ -11,6 +11,9 @@ from sys_mysql import getdata_one,getdata_all,insert_data
 from sys_date import PopupDateTime,CustomDateEntry,store_date,get_date
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
+header_csv = ["Index","No WO","No IFCA","Tanggal Buat","Jam Buat","Unit",\
+            "Work Request","Staff","Work Action","Tanggal Selesai","Jam Selesai",\
+            "Status WO","Diterima","Penerima","Tanggal Diterima","auth_login"]
 
 class PageMain(tk.Frame):
     def __init__(self,parent,user,dept):
@@ -198,6 +201,14 @@ class PageMain(tk.Frame):
             activebackground="#444",activeforeground="white")
         self.btnMainExp.grid(row=2,column=7,pady=10,padx=5)
 
+        self.btnImportCsv = Button(row1, text='Import',\
+            command=self.onImport_csv,\
+            state="normal", width=10,\
+            relief=RAISED, bd=2, \
+            bg="#558", fg="white", \
+            activebackground="#444",activeforeground="white")
+        self.btnImportCsv.grid(row=2,column=8,pady=10,padx=5)
+
         #tabel
         listifca = ttk.Frame(self.botFrame)
         listifca.grid(row=2,column=1,sticky=W,padx=10)
@@ -361,7 +372,7 @@ class PageMain(tk.Frame):
             self.sql = "SELECT * FROM logbook WHERE work_req LIKE %s ORDER BY date_create DESC"
             self.val = ("%{}%".format(cari),)
         else: pass
-#pr cek juga mengenai auth_
+
     def auto_wo(self):
         sql = "SELECT no_wo FROM logbook"
         val = ()
@@ -425,6 +436,63 @@ class PageMain(tk.Frame):
         self.tabelIfca.tag_configure("ganjil", background="gainsboro")
         self.tabelIfca.tag_configure("genap", background="floral white")                              
 
+    def onImport_csv(self):
+        if (self.dept != "ROOT"):
+            messagebox.showerror(title="Prohibited", \
+                message="This command is reserved for Administrator")
+            self.btnImportCsv.grid_forget()
+            return
+        fnames = filedialog.askopenfilename(filetypes=[("Excel CSV", "*.csv")])
+        if not fnames:
+            print("open file canceled")
+            return
+
+        with open(fnames) as countrow:
+            reader = csv.reader(countrow)
+            next(reader) # skip the heading
+            lines = len(list(reader)) # jumlah baris dalam file setelah header
+            # lines = sum(1 for row in reader) # ini juga bisa hitung jumlah baris
+            if lines > 100:
+                messagebox.showerror(title="Import File Error", \
+                    message="Row count: {}. Maximum is 100".format(lines))
+                return
+        
+        with open(fnames) as cek_header:
+            reader = csv.reader(cek_header)
+            for row in reader:
+                if row == header_csv:
+                    break
+                else: 
+                    messagebox.showerror(title="Import File Error", \
+                        message="The header file is invalid!")
+                    return
+
+        with open(fnames) as input_file:
+            reader = csv.reader(input_file)
+            next(reader) # skip the heading
+            update = 0
+            insert = 0
+            for row in reader:
+                if (row[0].isdigit() == False): # abaikan selain index=digit
+                    continue
+                if self.checkifca(row[2]) == False: #check IFCA, jika ada update aja
+                    print("IFCA",row[2],"Sudah terdaftar")
+                    update += 1
+                else: # insert baru
+                    sql = "INSERT INTO logbook (no_wo,no_ifca,date_create,time_create,unit,work_req,staff,\
+                        work_act,date_done,time_done,status_ifca,received,wo_receiver,date_received,auth_login)"+\
+                        "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                    # val = (row)
+                    val = (row[1],row[2],store_date(row[3]),row[4],row[5],row[6],row[7],row[8],\
+                        store_date(row[9]),row[10],row[11],row[12],row[13],store_date(row[14]),row[15])
+                    if (insert_data(sql,val)) == True:
+                        insert += 1
+                    else: 
+                        messagebox.showerror(title="Import File Error", \
+                            message="Fail on {}".format(row[2]))
+            messagebox.showinfo(title="Import File Result", \
+                message="Update IFCA: {0}\r\nNew Insert: {1}".format(update,insert))
+
     def onMainExport(self): #export from database treeview
         results = self.tabelIfca.get_children() # dalam format [list]
         if len(results) > 0:
@@ -454,12 +522,9 @@ class PageMain(tk.Frame):
                     message="Permission denied: {}".format(directory))
                 return
             cWrite=csv.writer(filename)
-            # cWrite.writerow("Export time","",get_date(datetime.now()))
             cWrite.writerow(["Export time","",datetime.now()])
             cWrite.writerow([""])
-            cWrite.writerow(["Index","No WO","No IFCA","Tanggal Buat","Jam Buat","Unit",\
-                    "Work Request","Staff","Work Action","Tanggal Selesai","Jam Selesai",\
-                    "Status WO","Diterima","Penerima","Tanggal Diterima","auth_login"])
+            cWrite.writerow(header_csv)
             i=1
             for dat in results:
                 value = self.tabelIfca.item(dat)['values']
@@ -603,7 +668,7 @@ class PageMain(tk.Frame):
     def onSave(self):
         cWo = self.checkwo(self.entWo.get()) # self.checkwo, jika salah return False
         cIfca = self.entIfca.get()
-        cTglBuat = self.entTglbuat.get()
+        cTglBuat = store_date(self.entTglbuat.get()) #check tgl dulu
         cJamBuat = self.entJambuat.get()
         cUnit = self.entUnit.get().upper().strip()
         cWorkReq = self.entWorkReq.get('1.0', 'end').upper().strip()
@@ -616,7 +681,7 @@ class PageMain(tk.Frame):
             messagebox.showerror(title="Error", \
             message="IFCA sudah terdaftar atau Input IFCA salah")
             self.entIfca.focus_set()
-        elif store_date(cTglBuat) == None or len(cJamBuat.strip()) == 0: #check tgl jika kosong, batalkan save
+        elif len(cTglBuat) == 0 or len(cJamBuat.strip()) != 5: #check tgl jika kosong, batalkan save
             messagebox.showerror(title="Error",message="Format tanggal salah")
         elif len(cUnit) == 0:
             messagebox.showwarning(title="Peringatan",message="Unit harus diisi.")
@@ -625,7 +690,7 @@ class PageMain(tk.Frame):
         else:
             sql = "INSERT INTO logbook (no_wo,no_ifca,date_create,time_create,unit,work_req,staff,auth_login)"+\
                   "VALUES(%s,%s,%s,%s,%s,%s,%s,%s)"
-            val = (cWo,cIfca,store_date(cTglBuat),cJamBuat,cUnit,cWorkReq,cStaff,self.user)
+            val = (cWo,cIfca,cTglBuat,cJamBuat,cUnit,cWorkReq,cStaff,self.user)
             if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Informasi",message="Data sudah di tersimpan.")
                 self.onClear()
@@ -660,13 +725,13 @@ class PageMain(tk.Frame):
                 self.entWorkAct.focus_set()
                 self.entWorkAct.delete('1.0', 'end')
                 return # stop aja karena cWorkAct tidak diisi
-            elif cTglDone == None or len(jamdone.strip()) == 0:
-                messagebox.showwarning(title="Peringatan",message="Tanggal harus diisi.")
+            elif len(cTglDone) == 0 or len(jamdone.strip()) != 5:
+                messagebox.showerror(title="Error",message="Format tanggal salah")
                 return # stop aja karena tanggal tidak diisi
             else : pass
         elif cStatus == "PENDING":
-            cTglDone = None
-            jamdone = None
+            cTglDone = ""
+            jamdone = ""
             if len(cStaff) <= 0: 
                 messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
                 self.entStaff.focus_set()
@@ -683,16 +748,16 @@ class PageMain(tk.Frame):
                 val = (cIfca,cTimeAcc,cWorkAct,cStaff,self.user)
                 print("Pending store data,",insert_data(sql,val))
         elif cStatus == "CANCEL":
-            cTglDone = None
-            jamdone = None
+            cTglDone = ""
+            jamdone = ""
             if len(cWorkAct) <= 0: 
                 messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
                 self.entWorkAct.focus_set()
                 self.entWorkAct.delete('1.0', 'end')
                 return # stop aja karena cWorkAct tidak diisi
         else : # UPDATE tidak perlu tanggal
-            cTglDone = None
-            jamdone = None
+            cTglDone = ""
+            jamdone = ""
         curItem = self.tabelIfca.item(self.tabelIfca.focus())
         if cWorkReq == curItem['values'][4] and \
             cStaff == curItem['values'][5] and cWorkAct == curItem['values'][6]:
