@@ -457,9 +457,9 @@ class PageMain(tk.Frame):
             # cWrite.writerow("Export time","",get_date(datetime.now()))
             cWrite.writerow(["Export time","",datetime.now()])
             cWrite.writerow([""])
-            cWrite.writerow(["Index","No WO","No IFCA","Tanggal Buat","Jam Buat",\
-                    "Unit","Work Request","Staff","Work Action","Tanggal Selesai",\
-                    "Jam Selesai","Status WO","Diterima","Penerima","Tanggal Diterima"])
+            cWrite.writerow(["Index","No WO","No IFCA","Tanggal Buat","Jam Buat","Unit",\
+                    "Work Request","Staff","Work Action","Tanggal Selesai","Jam Selesai",\
+                    "Status WO","Diterima","Penerima","Tanggal Diterima","auth_login"])
             i=1
             for dat in results:
                 value = self.tabelIfca.item(dat)['values']
@@ -623,9 +623,9 @@ class PageMain(tk.Frame):
             self.entUnit.focus_set()
             self.entUnit.delete(0, END)
         else:
-            sql = "INSERT INTO logbook (no_wo, no_ifca, date_create, time_create, unit, work_req, staff)"+\
-                  "VALUES(%s,%s,%s,%s,%s,%s,%s)"
-            val = (cWo,cIfca.upper(),store_date(cTglBuat),cJamBuat,cUnit,cWorkReq,cStaff)
+            sql = "INSERT INTO logbook (no_wo,no_ifca,date_create,time_create,unit,work_req,staff,auth_login)"+\
+                  "VALUES(%s,%s,%s,%s,%s,%s,%s,%s)"
+            val = (cWo,cIfca,store_date(cTglBuat),cJamBuat,cUnit,cWorkReq,cStaff,self.user)
             if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Informasi",message="Data sudah di tersimpan.")
                 self.onClear()
@@ -680,7 +680,7 @@ class PageMain(tk.Frame):
             else: ### jgn eksekusi sekarang mungkin?
                 sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login)"+\
                 "VALUES(%s,%s,%s,%s,%s)"
-                val = (cIfca,cTimeAcc,cWorkAct,cStaff,"")
+                val = (cIfca,cTimeAcc,cWorkAct,cStaff,self.user)
                 print("Pending store data,",insert_data(sql,val))
         elif cStatus == "CANCEL":
             cTglDone = None
@@ -698,8 +698,9 @@ class PageMain(tk.Frame):
             cStaff == curItem['values'][5] and cWorkAct == curItem['values'][6]:
             print("Tidak ada aktivitas perubahan")
         else:
-            sql = "UPDATE logbook SET no_wo=%s,no_ifca=%s,date_create=%s,work_req=%s,staff=%s,status_ifca=%s,date_done=%s,time_done=%s,work_act=%s WHERE no_ifca =%s"
-            val = (cWo,cIfca,cTglBuat,cWorkReq,cStaff,cStatus,cTglDone,jamdone,cWorkAct,cIfca)
+            sql = "UPDATE logbook SET no_wo=%s,no_ifca=%s,date_create=%s,work_req=%s,staff=%s,\
+                status_ifca=%s,date_done=%s,time_done=%s,work_act=%s,auth_login=%s WHERE no_ifca =%s"
+            val = (cWo,cIfca,cTglBuat,cWorkReq,cStaff,cStatus,cTglDone,jamdone,cWorkAct,self.user,cIfca)
             if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Informasi", \
                     message="Data sudah di terupdate.")
