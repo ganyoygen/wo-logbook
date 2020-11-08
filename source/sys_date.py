@@ -11,13 +11,13 @@ def store_date(inputdate):
         vdate, vtime = inputdate.split() #pisah tanggal dan jam
         try:
             dt = datetime.strptime(vdate,'%d-%m-%Y')
-            return '{0}-{1}-{2:02} {3}'.format(dt.year,dt.month,dt.day,vtime)
+            return '{0}-{1:02}-{2:02} {3}'.format(dt.year,dt.month,dt.day,vtime)
         except: return ""
     elif len(str(inputdate)) == 10:
         try:
             dt = datetime.strptime(inputdate,'%d-%m-%Y')
             # print ('{0}-{1}-{2:02}'.format(dt.month, dt.day, dt.year % 100))
-            return '{0}-{1}-{2:02}'.format(dt.year,dt.month,dt.day)
+            return '{0}-{1:02}-{2:02}'.format(dt.year,dt.month,dt.day)
         except: return ""
     else:
         return ""
@@ -29,20 +29,30 @@ def get_date(inputdate):
         vdate, vtime = inputdate.split() #pisah tanggal dan jam
         try:
             dt = datetime.strptime(vdate,'%Y-%m-%d')
-            return '{0:02}-{1}-{2} {3}'.format(dt.day,dt.month,dt.year,vtime)
+            return '{0:02}-{1:02}-{2} {3}'.format(dt.day,dt.month,dt.year,vtime)
         except: return ""
     elif len(str(inputdate)) == 10:
         try:
             dt = datetime.strptime(inputdate,'%Y-%m-%d')
-            return '{0:02}-{1}-{2}'.format(dt.day,dt.month,dt.year)
+            return '{0:02}-{1:02}-{2}'.format(dt.day,dt.month,dt.year)
         except: return ""
     else:
         return ""
 
 class GetSeconds():
     def __init__(self,inputdate):
-        formatingdate = datetime.strptime(inputdate,'%Y-%m-%d %H:%M:%S')
-        self.value = datetime.timestamp(formatingdate)
+        inputdate = inputdate.replace('/','-')
+        if len(str(inputdate)) >= 16:
+            vdate, vtime = inputdate.split() #pisah tanggal dan jam
+            if len(str(vtime)) == 5:
+                vtime = vtime + ":00"
+                inputdate = vdate +" "+ vtime
+        elif len(str(inputdate)) == 10:
+            inputdate = inputdate +" 00:00:00"
+        try:
+            formatingdate = datetime.strptime(inputdate,'%Y-%m-%d %H:%M:%S')
+            self.value = datetime.timestamp(formatingdate)
+        except: self.value = ""
 
 class GetDuration():
     def __init__(self,seconds):
