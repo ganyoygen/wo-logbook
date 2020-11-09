@@ -121,7 +121,7 @@ class PopupDateTime(object):
         # Allow only digit, ":" and check the length of the string
         if ((S == ":" and len(s) != 2) or (not S.isdigit() and
                 S != ":") or (len(s) == 3 and int(S) > 5) or len(s) > 4):
-            self.top.bell()
+            self.alarm()
             return False
          
         return True
@@ -137,8 +137,12 @@ class PopupDateTime(object):
         # if delete a char do return ok or delete the char ":" and the previous number
         if len(s.get()) == 2 and event.keysym=="BackSpace":
             s.delete(len(s.get())-1, tk.END)
-        if len(s.get()) < 5: self.okbtn["state"] = "disabled"
-        if len(s.get()) == 5: self.okbtn["state"] = "normal"
+        if len(s.get()) < 5: 
+            self.okbtn["state"] = "disabled"
+            self.hour.unbind("<Return>")
+        if len(s.get()) == 5: 
+            self.okbtn["state"] = "normal"
+            self.hour.bind("<Return>",self.cleanup)
         if event.keysym=="BackSpace":
             return
         
@@ -149,10 +153,10 @@ class PopupDateTime(object):
         elif len(s.get()) == 2 and int(s.get()) < 24:
             s.insert(2, ":")
         elif len(s.get()) >= 2 and s.get()[2:3] != ":":
-            self.top.bell()
+            self.alarm()
             s.delete(1, tk.END)
 
-    def alarm(self, event):
+    def alarm(self, event=None):
         self.top.bell()
 
     def _set_transient(self, master, relx=0.5, rely=0.3):
@@ -185,7 +189,7 @@ class PopupDateTime(object):
         widget.geometry("+%d+%d" % (x, y))
         widget.deiconify() # Become visible at the desired location
 
-    def cleanup(self):
+    def cleanup(self,event=None):
         self.value=self.date.get()+" "+self.hour.get()
         self.top.destroy()
 
