@@ -2,13 +2,14 @@ import tkinter as tk
 import os
 import csv # untuk write ke Excel
 import time
-# import datetime
+from threading import Thread
 from datetime import date,datetime
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
 from sys_mysql import getdata_one,getdata_all,insert_data
-from sys_date import PopupDateTime,CustomDateEntry,store_date,get_date
+from sys_date import GetDuration,PopupDateTime,CustomDateEntry,store_date,get_date
+from sys_progbar import SetProgBar
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
 header_csv = ["Index","No WO","No IFCA","Tanggal Buat","Jam Buat","Unit",\
@@ -437,6 +438,10 @@ class PageMain(tk.Frame):
         self.tabelIfca.tag_configure("genap", background="floral white")                              
 
     def onImport_csv(self):
+        Thread(target=self.proses_import).start()
+
+    def proses_import(self):
+        # section return (abort)
         if (self.dept != "ROOT"):
             messagebox.showerror(title="Prohibited", \
                 message="This command is reserved for Administrator")
@@ -446,17 +451,6 @@ class PageMain(tk.Frame):
         if not fnames:
             print("open file canceled")
             return
-
-        with open(fnames) as countrow:
-            reader = csv.reader(countrow)
-            next(reader) # skip the heading
-            lines = len(list(reader)) # jumlah baris dalam file setelah header
-            # lines = sum(1 for row in reader) # ini juga bisa hitung jumlah baris
-            if lines >= 1000:
-                messagebox.showerror(title="Import File Error", \
-                    message="Row count: {}. Maximum is 1000".format(lines))
-                return
-        
         with open(fnames) as cek_header:
             reader = csv.reader(cek_header)
             for row in reader:
@@ -466,13 +460,24 @@ class PageMain(tk.Frame):
                     messagebox.showerror(title="Import File Error", \
                         message="The header file is invalid!")
                     return
-
+        with open(fnames) as countrow:
+            reader = csv.reader(countrow)
+            next(reader) # skip the heading
+            lines = len(list(reader)) # jumlah baris dalam file setelah header
+            # lines = sum(1 for row in reader) # ini juga bisa hitung jumlah baris
+            if lines > 5000:
+                messagebox.showerror(title="Import File Error", \
+                    message="Row count: {}. Maximum is 5000".format(lines))
+                return
+        # section processing
+        start = time.perf_counter()
+        progbar = SetProgBar(self.parent,lines-1)
         with open(fnames) as input_file:
             reader = csv.reader(input_file)
             next(reader) # skip the heading
             update = 0
             insert = 0
-            for row in reader:
+            for rowno, row in enumerate(reader):
                 if (row[0].isdigit() == False): # abaikan selain index=digit
                     continue
                 if self.checkifca(row[2]) == False: #check IFCA, jika ada update aja
@@ -496,8 +501,13 @@ class PageMain(tk.Frame):
                     else: 
                         messagebox.showerror(title="Import File Error", \
                             message="Fail on New Insert {}".format(row[2]))
+                progbar.bytes = rowno
+            finish = time.perf_counter()
+            usedsecs = finish-start
+            if usedsecs > 60: usedsecs = GetDuration(usedsecs).value
             messagebox.showinfo(title="Import File Result", \
-                message="Update IFCA: {0}\r\nNew Insert: {1}".format(update,insert))
+                message="Update IFCA: {0}\r\nNew Record: {1}\r\nTime Used: {2}"\
+                    .format(update,insert,usedsecs))
         self.onSearch() #Refresh table by search
 
     def onMainExport(self): #export from database treeview
