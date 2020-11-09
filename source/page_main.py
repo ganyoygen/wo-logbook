@@ -452,9 +452,9 @@ class PageMain(tk.Frame):
             next(reader) # skip the heading
             lines = len(list(reader)) # jumlah baris dalam file setelah header
             # lines = sum(1 for row in reader) # ini juga bisa hitung jumlah baris
-            if lines > 100:
+            if lines >= 1000:
                 messagebox.showerror(title="Import File Error", \
-                    message="Row count: {}. Maximum is 100".format(lines))
+                    message="Row count: {}. Maximum is 1000".format(lines))
                 return
         
         with open(fnames) as cek_header:
@@ -476,8 +476,14 @@ class PageMain(tk.Frame):
                 if (row[0].isdigit() == False): # abaikan selain index=digit
                     continue
                 if self.checkifca(row[2]) == False: #check IFCA, jika ada update aja
-                    print("IFCA",row[2],"Sudah terdaftar")
-                    update += 1
+                    # print("IFCA",row[2],"Sudah terdaftar")
+                    sql = "UPDATE logbook SET date_create=%s,time_create=%s,unit=%s,work_req=%s WHERE no_ifca =%s"
+                    val = (store_date(row[3]),row[4],row[5],row[6],row[2])
+                    if (insert_data(sql,val)) == True:
+                        update += 1
+                    else:
+                        messagebox.showerror(title="Import File Error", \
+                            message="Fail on Update {}".format(row[2]))
                 else: # insert baru
                     sql = "INSERT INTO logbook (no_wo,no_ifca,date_create,time_create,unit,work_req,staff,\
                         work_act,date_done,time_done,status_ifca,received,wo_receiver,date_received,auth_login)"+\
@@ -489,9 +495,10 @@ class PageMain(tk.Frame):
                         insert += 1
                     else: 
                         messagebox.showerror(title="Import File Error", \
-                            message="Fail on {}".format(row[2]))
+                            message="Fail on New Insert {}".format(row[2]))
             messagebox.showinfo(title="Import File Result", \
                 message="Update IFCA: {0}\r\nNew Insert: {1}".format(update,insert))
+        self.onSearch() #Refresh table by search
 
     def onMainExport(self): #export from database treeview
         results = self.tabelIfca.get_children() # dalam format [list]
@@ -819,5 +826,5 @@ def testrun(user,dept):
 if __name__ == "__main__":
     from ttkthemes import ThemedTk
     root = ThemedTk(theme='scidblue')
-    testrun("UkikLodom","ENG")
+    testrun("UkikLodom","ROOT")
     
