@@ -1,53 +1,92 @@
-import tkinter
+import os
 import socket
 import time
+import tkinter as tk
 from tkinter import *
-from tkinter import ttk, messagebox
+from tkinter import ttk,messagebox,Toplevel
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 from datetime import datetime
 from sys_mysql import insert_data,getdata_one
 from sys_account import RegisterAcct,RemoveAcct
-from sys_pwhash import generate_hash,verify_password
+from sys_pwhash import verify_password
 from sys_date import GetSeconds,GetDuration
 from sys_config import SetConfig
 
-root = ThemedTk(theme='aquativo')
 
-class Login:
-    def __init__(self,parent,title):
+class Login(object):
+    def __init__(self,parent):
+        top = self.top = Toplevel(parent)
+        top.title("Login Program")
+        top.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
         self.parent = parent
-        self.parent.title(title)
-        self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
-        lebar=270
-        tinggi=100
-        setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
-        setTengahY = (self.parent.winfo_screenheight()-tinggi)//2
-        self.parent.geometry("%ix%i+%i+%i" %(lebar, tinggi,setTengahX, setTengahY))
-        self.aturKomponen()
-        
-    def aturKomponen(self):
-        ttk.Label(self.parent, text="Username").grid(row=0,column=0,sticky=W,padx=6,pady=6)
-        ttk.Label(self.parent, text="Password").grid(row=1,column=0,sticky=W,padx=6,pady=6)
+        self.top.protocol("WM_DELETE_WINDOW", self.keluar)
 
-        self.entryUsername = ttk.Entry(self.parent,width=17)
+        self.user = ""
+        self.dept = ""
+        frame = ttk.Frame(top)
+        frame.grid(row=0,column=0)
+
+        ttk.Label(frame, text="Username").grid(row=0,column=0,sticky=W,padx=6,pady=6)
+        ttk.Label(frame, text="Password").grid(row=1,column=0,sticky=W,padx=6,pady=6)
+
+        self.entryUsername = ttk.Entry(frame,width=17)
         self.entryUsername.grid(row=0, column=1,sticky=W)
         self.entryUsername.bind('<Return>', self.letEntryPass)
 
-        self.entryPassword = ttk.Entry(self.parent,show='*',width=17)
+        self.entryPassword = ttk.Entry(frame,show='*',width=17)
         self.entryPassword.grid(row=1, column=1,sticky=W)
         self.entryPassword.bind('<Return>', self.proses)
 
-        ttk.Button(self.parent,text="ConfigDB",\
+        ttk.Button(frame,text="ConfigDB",\
             command=self.config_db,width=10).grid(row=2, column=0,padx=6)
-        ttk.Button(self.parent,text="Login",\
+        ttk.Button(frame,text="Login",\
             command=self.proses,width=10).grid(row=2, column=1,padx=6)
-        ttk.Button(self.parent,text="Register",\
+        ttk.Button(frame,text="Register",\
             command=self.regacct,width=10).grid(row=2, column=2,padx=6)
 
         self.entryUsername.focus_set()
+        # top.wait_visibility() 
+        top.grab_set()
+        top.bind("<FocusOut>", self.alarm)
+        top.resizable(0,0)
+        self._set_transient(parent)
+
+    def _set_transient(self, master, relx=0.5, rely=0.3):
+        # window proses ikut parent (without icon taskbar)
+        widget = self.top
+        widget.withdraw() # Remain invisible while we figure out the geometry
+        widget.transient(master)
+        widget.update_idletasks() # Actualize geometry information
+        if master.winfo_ismapped():
+            m_width = master.winfo_width()
+            m_height = master.winfo_height()
+            m_x = master.winfo_rootx()
+            m_y = master.winfo_rooty()
+        else:
+            m_width = master.winfo_screenwidth()
+            m_height = master.winfo_screenheight()
+            m_x = m_y = 0
+        w_width = widget.winfo_reqwidth()
+        w_height = widget.winfo_reqheight()
+        x = m_x + (m_width - w_width) * relx
+        y = m_y + (m_height - w_height) * rely
+        if x+w_width > master.winfo_screenwidth():
+            x = master.winfo_screenwidth() - w_width
+        elif x < 0:
+            x = 0
+        if y+w_height > master.winfo_screenheight():
+            y = master.winfo_screenheight() - w_height
+        elif y < 0:
+            y = 0
+        widget.geometry("+%d+%d" % (x, y))
+        widget.deiconify() # Become visible at the desired location
+
+    def alarm(self, event):
+        self.top.bell()
 
     def keluar(self,event=None):
         if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
+            self.top.destroy()
             self.parent.destroy()
 
     def letEntryPass(self,event=None):
@@ -88,10 +127,12 @@ class Login:
                 sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s WHERE uid=%s"
                 val = (datetime.now(),host_name,host_ip,data[0])
                 if (insert_data(sql,val)) == True:
-                    root.destroy()
-                    # import main
-                    from main import start
-                    start(user,dept)
+                    # root.destroy()
+                    # from main import start
+                    # start(user,dept)
+                    self.user = user
+                    self.dept = dept
+                    self.top.destroy()
                 else: return
             elif (user==""):
                 self.entryUsername.focus_set()
@@ -116,8 +157,22 @@ class Login:
         setconfig = SetConfig(self.parent)
         setconfig.parent.wait_window(setconfig.top)
 
-def main():
-    Login(root, "Login Program")
-    root.mainloop()
-main()
 
+class TestRun(object):
+    def __init__(self,master):
+        self.master=master
+        self.setbtn=ttk.Button(master,text="Login",command=self.popup)
+        self.setbtn.pack()
+
+    def popup(self):
+        self.gopopup=Login(self.master)
+        self.setbtn["state"] = "disabled"
+        self.master.wait_window(self.gopopup.top)
+        self.setbtn["state"] = "normal"
+
+if __name__ == "__main__":
+    # root=tk.Tk()
+    root = ThemedTk(theme='aquativo')
+    # TestRun(root)
+    Login(root)
+    root.mainloop()

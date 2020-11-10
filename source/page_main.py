@@ -680,7 +680,7 @@ class PageMain(tk.Frame):
         self.onSearch()
         self.auto_wo()
         self.entUnit.focus_set()
-        os.system("cls")
+        # os.system("cls")
 
     def onSave(self):
         cWo = self.checkwo(self.entWo.get()) # self.checkwo, jika salah return False

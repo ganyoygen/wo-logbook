@@ -7,10 +7,9 @@ from page_progress import PageProg
 from page_user import UserMgmt
 from page_about import About
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
+from login import Login
 
-# root = Tk()
-root = ThemedTk(theme='scidblue')
-VERSION = "1.11.20"
+VERSION = "1.1-11.20"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -33,18 +32,27 @@ class WindowDraggable():
             root.geometry("+%s+%s" % (x, y))
 
 class MainLog:
-    def __init__(self,parent,user,dept):
+    def __init__(self,parent):
         self.parent = parent
-        self.user = user
-        self.dept = dept
+        self.user = ""
+        self.dept = ""
         self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
         lebar=950
         tinggi=680
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
         setTengahY = (self.parent.winfo_screenheight()-tinggi)//2
         self.parent.geometry("%ix%i+%i+%i" %(lebar, tinggi,setTengahX, setTengahY-40)) # setTengahY-40 : Biar lebih keatas
-        
-        self.aturKomponen()
+        self.startlogin()
+
+    def startlogin(self):
+        self.login = Login(self.parent)
+        self.login.parent.wait_window(self.login.top)
+        self.user = self.login.user
+        self.dept = self.login.dept
+        if self.user == "" and self.dept == "":
+            self.keluar()
+        else:
+            self.aturKomponen()
     
     def aturKomponen(self):
         frameWin = Frame(self.parent, bg="#898")
@@ -78,15 +86,20 @@ class MainLog:
         if self.dept != "ROOT": self.notebook.tab(2, state = 'disabled')
 
     def keluar(self,event=None):
-        if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
+        # print("disable close on the main windows!")
+        try: 
+            self.login.parent.destroy()
             self.parent.destroy()
+        except: pass
+        # if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
+            # self.parent.destroy()
 
-def start(user,dept):
-    os.system("cls")
-    root.title("Work Order Manager")
-    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
-    MainLog(root,user,dept)
 
 if __name__ == "__main__":
-    start("UkikLodom","ROOT")
+    # os.system("cls")
+    # root = Tk()
+    root = ThemedTk(theme='scidblue')
+    root.title("Work Order Manager")
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    MainLog(root)
     root.mainloop()

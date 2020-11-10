@@ -83,7 +83,7 @@ class TestRun(object):
         self.setbtn.pack()
 
     def popup(self):
-        os.system("cls")
+        # os.system("cls")
         data = 100
         test=SetProgBar(self.master,data)
         self.setbtn["state"] = "disabled"
