@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import ttk,Toplevel,messagebox
 from configparser import ConfigParser
-from custom_entry import LimitEntry
+from sys_entry import LimitEntry
 from sys_mysql import read_db_config
 
 getfile = str(os.getcwd())+"\\"+"config.ini"

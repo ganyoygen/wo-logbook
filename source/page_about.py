@@ -6,7 +6,7 @@ from datetime import datetime
 # from sys_mysql import *
 from sys_mysql import getdata_one,insert_data
 from sys_pwhash import generate_hash,verify_password
-from custom_entry import LimitEntry
+from sys_entry import LimitEntry
 
 
 class About(tk.Frame):

@@ -6,7 +6,7 @@ from tkcalendar import DateEntry
 from datetime import datetime
 from sys_mysql import insert_data,getdata_one
 from sys_pwhash import generate_hash,verify_password
-from custom_entry import LimitEntry
+from sys_entry import LimitEntry
 
 class RegisterAcct(object):
     def __init__(self,parent):

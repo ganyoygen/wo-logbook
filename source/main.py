@@ -1,7 +1,7 @@
 import os
 import tkinter
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk,messagebox
 from page_main import PageMain
 from page_progress import PageProg
 from page_user import UserMgmt
@@ -10,6 +10,7 @@ from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 
 # root = Tk()
 root = ThemedTk(theme='scidblue')
+VERSION = "1.11.20"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -48,10 +49,13 @@ class MainLog:
     def aturKomponen(self):
         frameWin = Frame(self.parent, bg="#898")
         frameWin.pack(fill=X,side=TOP)
+        footer = Frame(self.parent)
+        footer.pack(fill=X,side=BOTTOM)
         WindowDraggable(frameWin)
-        Label(frameWin, text='Work Order Logbook Record',bg="#898",fg="white").pack(side=LEFT,padx=20)
-        # Label(frameWin, text=("Login:",self.user),bg="#898",fg="white").pack(side=RIGHT,padx=20)
-        Label(frameWin, text=("Login: {0}.{1}".format(self.user,self.dept)),bg="#898",fg="white").pack(side=RIGHT,padx=20)
+        # Label(frameWin, text='Work Order Logbook Record',bg="#898",fg="white").pack(side=LEFT,padx=20)
+        Label(frameWin, text=("Login: {0}.{1}".format(self.user,self.dept)),bg="#898",fg="white").pack(side=LEFT,padx=20)
+        Label(footer, text=("Work Order Manager Version: {0}".format(VERSION))).pack(side=LEFT,padx=10)
+        Label(footer, text=("Copyright © 2020 prasetya.angga.pares@gmail.com")).pack(side=RIGHT,padx=10)
         '''
         # Menghilangkan Frame windows
         buttonx = Button(frameWin, text="X",fg="white", bg="#FA8072", width=6, height=2,bd=0,\
@@ -74,12 +78,12 @@ class MainLog:
         if self.dept != "ROOT": self.notebook.tab(2, state = 'disabled')
 
     def keluar(self,event=None):
-        print("Program has been closed.")
-        self.parent.destroy()
+        if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
+            self.parent.destroy()
 
 def start(user,dept):
     os.system("cls")
-    root.title("Project Logbook by GanyoyGen")
+    root.title("Work Order Manager")
     root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
     MainLog(root,user,dept)
 
