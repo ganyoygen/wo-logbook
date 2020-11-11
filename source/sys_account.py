@@ -76,7 +76,6 @@ class RegisterAcct(object):
         self.top.bell()
     
     def proses(self):
-        getTime = datetime.now()
         sql = "SELECT * FROM acct WHERE username = %s"
         val = (self.entUser.get(),)
         data = getdata_one(sql,val)
@@ -100,9 +99,9 @@ class RegisterAcct(object):
                 self.entUser.focus_set()
             else:
                 storepw = generate_hash(self.entPass.get())
-                sql = "INSERT INTO acct (username,passhash,email,dept,date_create)"+\
-                      "VALUES(%s,%s,%s,%s,%s)"
-                val = (self.entUser.get().strip(),storepw,self.entEmail.get(),"USER",getTime)
+                sql = "INSERT INTO acct (username,passhash,email,dept,date_create,last_logout)"+\
+                      "VALUES(%s,%s,%s,%s,%s,%s)"
+                val = (self.entUser.get().strip(),storepw,self.entEmail.get(),"USER",datetime.now(),datetime.now())
                 if (insert_data(sql,val)) == True:
                     messagebox.showinfo(title="Account Info", message="Account registration is successful")
                     self.value = self.entUser.get()

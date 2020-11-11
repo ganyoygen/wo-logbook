@@ -2,14 +2,16 @@ import os
 import tkinter
 from tkinter import *
 from tkinter import ttk,messagebox
+from ttkthemes import ThemedTk # make sure to pip install ttkthemes
+from datetime import datetime
 from page_main import PageMain
 from page_progress import PageProg
 from page_user import UserMgmt
 from page_about import About
-from ttkthemes import ThemedTk # make sure to pip install ttkthemes
 from login import Login
+from sys_mysql import insert_data
 
-VERSION = "1.1-11.20"
+VERSION = "1.6.20"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -45,14 +47,12 @@ class MainLog:
         self.startlogin()
 
     def startlogin(self):
-        self.login = Login(self.parent)
-        self.login.parent.wait_window(self.login.top)
-        self.user = self.login.user
-        self.dept = self.login.dept
-        if self.user == "" and self.dept == "":
-            self.keluar()
-        else:
-            self.aturKomponen()
+        getlogin = Login(self.parent)
+        getlogin.parent.wait_window(getlogin.top)
+        self.user = getlogin.user
+        self.dept = getlogin.dept
+        try: self.aturKomponen()
+        except: pass
     
     def aturKomponen(self):
         frameWin = Frame(self.parent, bg="#898")
@@ -62,6 +62,7 @@ class MainLog:
         WindowDraggable(frameWin)
         # Label(frameWin, text='Work Order Logbook Record',bg="#898",fg="white").pack(side=LEFT,padx=20)
         Label(frameWin, text=("Login: {0}.{1}".format(self.user,self.dept)),bg="#898",fg="white").pack(side=LEFT,padx=20)
+        Button(frameWin, text="RELOG",command=self.relog,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
         Label(footer, text=("Work Order Manager Version: {0}".format(VERSION))).pack(side=LEFT,padx=10)
         Label(footer, text=("Copyright © 2020 prasetya.angga.pares@gmail.com")).pack(side=RIGHT,padx=10)
         '''
@@ -78,28 +79,54 @@ class MainLog:
         page0 = PageMain(self.notebook,self.user,self.dept)
         page1 = PageProg(self.notebook,self.user,self.dept)
         page2 = UserMgmt(self.notebook,self.user,self.dept)
-        page3 = About(self.notebook,self.user,self.dept)
+        self.page3 = About(self.notebook,self.user,self.dept)
         self.notebook.add(page0, text="Main")
         self.notebook.add(page1, text="Progress")
         self.notebook.add(page2, text="User Mgmt")
-        self.notebook.add(page3, text="About")
+        self.notebook.add(self.page3, text="About")
         if self.dept != "ROOT": self.notebook.tab(2, state = 'disabled')
 
     def keluar(self,event=None):
-        # print("disable close on the main windows!")
-        try: 
-            self.login.parent.destroy()
-            self.parent.destroy()
-        except: pass
-        # if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
-            # self.parent.destroy()
+        if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
+            if self.updateUser() == False:
+                self.updateUser()
+            else: self.parent.destroy()
 
+    def relog(self,event=None):
+        if (messagebox.askokcancel("Attention","Do you really want to relogin the App?")):
+            if self.updateUser() == False:
+                self.updateUser()
+            else:
+                self.parent.destroy()
+                start()
+    
+    def updateUser(self):
+        try:
+            sql = "UPDATE acct SET last_logout=%s WHERE uid=%s"
+            val = (datetime.now(),self.page3.entUid.get())
+            if (insert_data(sql,val)) == True:
+                return True
+            else: return False
+        except: # ijinkan exit saat login page (uid undefined)
+            return True 
+                    
 
-if __name__ == "__main__":
-    # os.system("cls")
-    # root = Tk()
-    root = ThemedTk(theme='scidblue')
+def start():
+    global root
+    # root = ThemedTk(theme='scidblue')
+    root = Tk()
     root.title("Work Order Manager")
     root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
     MainLog(root)
     root.mainloop()
+
+
+if __name__ == "__main__":
+    # os.system("cls")
+    start()
+    # root = Tk()
+    # root = ThemedTk(theme='scidblue')
+    # root.title("Work Order Manager")
+    # root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    # MainLog(root)
+    # root.mainloop()

@@ -11,7 +11,8 @@ from sys_date import PopupDateTime,GetSeconds
 from sys_account import RemoveAcct
 
 
-kolomUser = ("UID","Username","Class","Date Created","Activated","Locked","Date Locked","Last Login","Last Host","Last IP")
+kolomUser = ("UID","Username","Class","Date Created","Activated","Locked",\
+    "Date Locked","Last Login","Last Host","Last IP","Last Logout","Email")
 
 class UserMgmt(tk.Frame):
     def __init__(self,parent,user,dept):
@@ -146,7 +147,7 @@ class UserMgmt(tk.Frame):
         curItem = self.tabelUser.item(self.tabelUser.focus())
         self.entUid.insert(END,curItem['values'][0])
         self.entName.insert(END,curItem['values'][1])
-        self.entEmail.insert(END,curItem['values'][10])
+        self.entEmail.insert(END,curItem['values'][11])
 
         if curItem['values'][2] == "ROOT": self.entDept.current(1)
         elif curItem['values'][2] == "ENG": self.entDept.current(2)
@@ -175,7 +176,7 @@ class UserMgmt(tk.Frame):
         self.entryset("clear")
         # sql = "SELECT * FROM acct"
         sql = "SELECT `uid`,`username`,`dept`,`date_create`,`activated`,`lock`,\
-            `date_lock`,`last_login`,`last_host`,`last_ip`,`email` FROM `acct`"
+            `date_lock`,`last_login`,`last_host`,`last_ip`,`last_logout`,`email` FROM `acct`"
         val = ()
         results = getdata_all(sql,val)
         self.tabelUser.delete(*self.tabelUser.get_children()) #refresh, hapus dulu tabel lama
@@ -191,6 +192,8 @@ class UserMgmt(tk.Frame):
         self.tabelUser.column("Last Login", width=120,anchor="w")
         self.tabelUser.column("Last Host", width=80,anchor="w")
         self.tabelUser.column("Last IP", width=80,anchor="w")
+        self.tabelUser.column("Last Logout", width=80,anchor="w")
+        self.tabelUser.column("Email", width=80,anchor="w")
         
         i=u=0
         for dat in results:

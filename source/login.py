@@ -46,7 +46,7 @@ class Login(object):
 
         self.entryUsername.focus_set()
         # top.wait_visibility() 
-        top.grab_set()
+        # top.grab_set()
         top.bind("<FocusOut>", self.alarm)
         top.resizable(0,0)
         self._set_transient(parent)
@@ -85,9 +85,8 @@ class Login(object):
         self.top.bell()
 
     def keluar(self,event=None):
-        if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
-            self.top.destroy()
-            self.parent.destroy()
+        pass
+        # close app by master windows
 
     def letEntryPass(self,event=None):
         self.entryPassword.focus_set()
@@ -124,20 +123,17 @@ class Login(object):
                     messagebox.showerror(title="Account dikunci", \
                     message="Tidak dapat menggunakan program.\r\nAccount anda telah dikunci.")
                     return
-                sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s WHERE uid=%s"
-                val = (datetime.now(),host_name,host_ip,data[0])
+                if data[12] == None:
+                    messagebox.showerror(title="Double Login Warning!", \
+                    message="Tidak dapat login program.\r\nAccount anda sedang digunakan.")
+                    return
+                sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s,last_logout=%s WHERE uid=%s"
+                val = (datetime.now(),host_name,host_ip,"",data[0])
                 if (insert_data(sql,val)) == True:
-                    # root.destroy()
-                    # from main import start
-                    # start(user,dept)
                     self.user = user
                     self.dept = dept
                     self.top.destroy()
                 else: return
-            elif (user==""):
-                self.entryUsername.focus_set()
-            elif (password==""):
-                self.entryPassword.focus_set()
             else: #untuk salah password
                 self.entryPassword.delete(0, END)
                 self.entryPassword.focus_set()
@@ -165,14 +161,15 @@ class TestRun(object):
         self.setbtn.pack()
 
     def popup(self):
-        self.gopopup=Login(self.master)
+        gopopup=Login(self.master)
         self.setbtn["state"] = "disabled"
-        self.master.wait_window(self.gopopup.top)
-        self.setbtn["state"] = "normal"
+        self.master.wait_window(gopopup.top)
+        try: self.setbtn["state"] = "normal"
+        except: pass
 
 if __name__ == "__main__":
     # root=tk.Tk()
     root = ThemedTk(theme='aquativo')
-    # TestRun(root)
-    Login(root)
+    TestRun(root)
+    # Login(root)
     root.mainloop()
