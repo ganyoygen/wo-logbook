@@ -361,7 +361,7 @@ class PageMain(tk.Frame):
             else: #part jika search between date
                 sdate = store_date(self.dateStart.get())
                 edate = store_date(self.dateEnd.get())
-                self.sql = "SELECT * FROM logbook WHERE (date_create BETWEEN %s AND %s) ORDER BY date_create DESC"
+                self.sql = "SELECT * FROM logbook WHERE (date_create BETWEEN %s AND %s) ORDER BY no_ifca DESC"
                 self.val = ('{}'.format(sdate),'{}'.format(edate))
         elif opsi == "IFCA":
             self.sql = "SELECT * FROM logbook WHERE no_ifca LIKE %s ORDER BY no_ifca DESC"
