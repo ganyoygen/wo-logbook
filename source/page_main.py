@@ -181,9 +181,10 @@ class PageMain(tk.Frame):
         self.entCari.grid(row=2, column=2)
         self.dateStart = CustomDateEntry(row1,width=10,locale='en_UK')
         self.dateEnd = CustomDateEntry(row1,width=10,locale='en_UK')
-        # self.dateStart.grid(row=2,column=2)
         ttk.Label(row1, text='~').grid(row=2,column=3)
-        # self.dateEnd.grid(row=2,column=4)
+        self.entCari.bind('<Return>',self.onSearch)
+        self.dateStart.bind('<Return>',self.onSearch)
+        self.dateEnd.bind('<Return>',self.onSearch)
 
         # self.entCari.bind('<KeyRelease>',self.onSearch) #cari saat input apapun
         
@@ -343,7 +344,7 @@ class PageMain(tk.Frame):
             self.dateEnd.grid_forget()
             self.entCari.grid(row=2, column=2,sticky=W)
 
-    def onSearch(self):
+    def onSearch(self,event=None):
         self.entrySet("mainclear")
         self.opsiStatus.current(0)
         self.querySearch() # set dulu variabel self.sql dan self.val
