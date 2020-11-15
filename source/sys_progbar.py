@@ -16,6 +16,8 @@ class SetProgBar(object):
 
         self.pbar = ttk.Progressbar(topFr,orient="horizontal",length=500,mode="determinate")
         self.pbar.grid(row=1,column=0)
+        self.plabel = ttk.Label(topFr,text="")
+        self.plabel.grid(row=2,column=0)
         self.bytes = 0
         self.pbar["value"] = 0
         self.maxbytes = data
@@ -32,6 +34,8 @@ class SetProgBar(object):
         '''simulate reading 500 bytes; update progress bar'''
         # self.bytes += 10
         self.pbar["value"] = self.bytes
+        # self.plabel.config(text=str((self.bytes/self.maxbytes)*100)+"%")
+        self.plabel.config(text=str(self.bytes)+"/"+str(self.maxbytes))
         if self.bytes < self.maxbytes:
             self.top.after(100, self.read_data)
         else:
@@ -87,8 +91,8 @@ class TestRun(object):
         data = 100
         test=SetProgBar(self.master,data)
         self.setbtn["state"] = "disabled"
-        for i in range(data+1):
-            test.bytes = i
+        for i in range(data):
+            test.bytes = i+1 #update self.bytes hingga memenuhi data 
         self.master.wait_window(test.top)
         self.setbtn["state"] = "normal"
 

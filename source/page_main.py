@@ -472,7 +472,7 @@ class PageMain(tk.Frame):
                 return
         # section processing
         start = time.perf_counter()
-        progbar = SetProgBar(self.parent,lines-1)
+        progbar = SetProgBar(self.parent,lines)
         with open(fnames) as input_file:
             reader = csv.reader(input_file)
             next(reader) # skip the heading
@@ -502,7 +502,7 @@ class PageMain(tk.Frame):
                     else: 
                         messagebox.showerror(title="Import File Error", \
                             message="Fail on New Insert {}".format(row[2]))
-                progbar.bytes = rowno
+                progbar.bytes = rowno + 1
             finish = time.perf_counter()
             usedsecs = finish-start
             if usedsecs > 60: usedsecs = GetDuration(usedsecs).value
