@@ -39,7 +39,7 @@ class MainLog:
         self.user = ""
         self.dept = ""
         self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
-        lebar=950
+        lebar=1100
         tinggi=680
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
         setTengahY = (self.parent.winfo_screenheight()-tinggi)//2
