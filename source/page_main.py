@@ -750,6 +750,7 @@ class PageMain(tk.Frame):
         elif cStatus == "PENDING":
             cTglDone = ""
             jamdone = ""
+            com_auth_by = cStaff+"@"+self.user
             if len(cStaff) <= 0: 
                 messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
                 self.entStaff.focus_set()
@@ -761,9 +762,9 @@ class PageMain(tk.Frame):
                 self.entWorkAct.delete('1.0', 'end')
                 return # stop aja karena cWorkAct tidak diisi
             else: ### jgn eksekusi sekarang mungkin?
-                sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login)"+\
-                "VALUES(%s,%s,%s,%s,%s)"
-                val = (cIfca,cTimeAcc,cWorkAct,cStaff,self.user)
+                sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login,auth_dept)"+\
+                "VALUES(%s,%s,%s,%s,%s,%s)"
+                val = (cIfca,cTimeAcc,cWorkAct,com_auth_by,self.user,self.dept)
                 print("Pending store data,",insert_data(sql,val))
         elif cStatus == "CANCEL":
             cTglDone = ""
