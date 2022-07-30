@@ -265,6 +265,12 @@ class PageMain(tk.Frame):
             self.entJamdone.config(state="readonly")
             # A #
         # mainentry readonly panel kiri kecuali work req dan staff
+        elif opsi == "enablebtn":
+            self.btnDateCreate.config(state="normal")
+            self.btnDateDone.config(state="normal")
+            self.btnSave.config(state="normal")
+            self.rbtnBM.config(state="normal")
+            self.rbtnTN.config(state="normal")
         elif opsi == "disablebtn":
             self.btnDateCreate.config(state="disable")
             self.btnDateDone.config(state="disable")
@@ -601,14 +607,16 @@ class PageMain(tk.Frame):
             ifca_value = curItem['values'][1]
             self.entrySet("mainclear")
             self.entrySet("disablebtn")
-            if self.dept == "ROOT": self.btnDelete.config(state="normal")
             self.entTglbuat.config(state="normal")
             self.entJambuat.config(state="normal")
             self.entTgldone.config(state="normal")
             self.entJamdone.config(state="normal")
-            sql = "SELECT * FROM logbook WHERE no_ifca = %s"
-            val = (ifca_value,)
+            # sql = "SELECT * FROM logbook WHERE no_ifca = %s"
+            # val = (ifca_value,)
+            sql = "SELECT * FROM logbook WHERE (no_ifca = %s AND time_create = %s)"
+            val = (ifca_value,curItem['values'][12]) # prevent ketika no IFCA sama sertakan JAM buat
             data = getdata_one(sql,val)
+            self.idWO = data[0] # simpan data ID wo
             self.entIfca.insert(END, ifca_value)
             self.entWo.insert(END, data[1])
             self.entTglbuat.insert(END,get_date(str(data[3])))
@@ -640,8 +648,12 @@ class PageMain(tk.Frame):
             if data[10] == True and ifca_value[:2] == "TN":
                 # tidak dapat receive wo TN karena sudah direceive
                 self.btnReceived.config(state="disable")
-            # read only setelah entry terisi
-            self.entrySet("mainreadifca")
+            if self.dept == "ROOT": # bisa edit untuk root
+                self.entrySet("enablebtn")
+                self.btnUpdate.config(state="normal")
+                self.btnDelete.config(state="normal")
+                self.btnSave.config(state="disable")
+            else: self.entrySet("mainreadifca") # read only setelah entry terisi
         except:
             print('Tidak ada data di tabel')
 
@@ -660,13 +672,8 @@ class PageMain(tk.Frame):
         else: pass
 
     def onClear(self):
-        self.entrySet("disablebtn")
-        if self.dept == "ENG": # khusus class ENG
-            self.btnDateCreate.config(state="normal")
-            self.btnDateDone.config(state="normal")
-            self.btnSave.config(state="normal")
-            self.rbtnBM.config(state="normal")
-            self.rbtnTN.config(state="normal")
+        if self.dept == "ENG": self.entrySet("enablebtn")# khusus class ENG
+        else: self.entrySet("disablebtn")
         self.tabelIfca.delete(*self.tabelIfca.get_children())
         self.entCari.delete(0, END)
         self.dateStart.delete(0, END)
@@ -681,7 +688,7 @@ class PageMain(tk.Frame):
         self.onSearch()
         self.auto_wo()
         self.entUnit.focus_set()
-        # os.system("cls")
+        os.system("cls")
 
     def onSave(self):
         cWo = self.checkwo(self.entWo.get()) # self.checkwo, jika salah return False
@@ -718,6 +725,8 @@ class PageMain(tk.Frame):
         cWo = self.entWo.get()
         cIfca = self.entIfca.get()
         cTglBuat = store_date(self.entTglbuat.get()) #check tgl dulu
+        cJamBuat = self.entJambuat.get()
+        cUnit = self.entUnit.get().upper().strip()
         cWorkReq = self.entWorkReq.get('1.0', 'end').upper().strip()
         cStaff = self.entStaff.get().upper().strip()
         cStatus = self.opsiStatus.get()
@@ -779,12 +788,14 @@ class PageMain(tk.Frame):
             jamdone = ""
         curItem = self.tabelIfca.item(self.tabelIfca.focus())
         if cWorkReq == curItem['values'][4] and \
-            cStaff == curItem['values'][5] and cWorkAct == curItem['values'][6]:
+            cStaff == curItem['values'][5] and \
+            cWorkAct == curItem['values'][6] and \
+            self.dept == "ENG": # penegasan, agar root dapat edit parameter lain
             print("Tidak ada aktivitas perubahan")
         else:
-            sql = "UPDATE logbook SET no_wo=%s,no_ifca=%s,date_create=%s,work_req=%s,staff=%s,\
-                status_ifca=%s,date_done=%s,time_done=%s,work_act=%s,auth_login=%s WHERE no_ifca =%s"
-            val = (cWo,cIfca,cTglBuat,cWorkReq,cStaff,cStatus,cTglDone,jamdone,cWorkAct,self.user,cIfca)
+            sql = "UPDATE logbook SET no_wo=%s,no_ifca=%s,date_create=%s,time_create=%s,unit=%s,work_req=%s,staff=%s,\
+                status_ifca=%s,date_done=%s,time_done=%s,work_act=%s,auth_login=%s WHERE id =%s"
+            val = (cWo,cIfca,cTglBuat,cJamBuat,cUnit,cWorkReq,cStaff,cStatus,cTglDone,jamdone,cWorkAct,self.user,self.idWO)
             if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Informasi", \
                     message="Data sudah di terupdate.")
