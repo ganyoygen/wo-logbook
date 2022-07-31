@@ -113,7 +113,7 @@ class MainLog:
 
 def start():
     global root
-    root = ThemedTk(theme='scidblue')
+    root = ThemedTk(theme='clearlooks')
     # root = Tk()
     root.title("Work Order Manager")
     root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))

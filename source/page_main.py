@@ -133,6 +133,9 @@ class PageMain(tk.Frame):
         self.entRecDate.grid(row=0, column=0,sticky=W)
         self.entRecBy = ttk.Entry(recentry, width=25)
         self.entRecBy.grid(row=0, column=1,sticky=W)
+        self.varRec=IntVar()
+        self.btnCekRec = ttk.Checkbutton(recentry,variable=self.varRec)
+        self.btnCekRec.grid(row=0, column=2)
 
     def komponenTengah(self):
         #panel button
@@ -264,6 +267,7 @@ class PageMain(tk.Frame):
             self.entTgldone.config(state="readonly")
             self.entJamdone.config(state="readonly")
             # A #
+            self.varRec.set(0)
         # mainentry readonly panel kiri kecuali work req dan staff
         elif opsi == "enablebtn":
             self.btnDateCreate.config(state="normal")
@@ -271,12 +275,14 @@ class PageMain(tk.Frame):
             self.btnSave.config(state="normal")
             self.rbtnBM.config(state="normal")
             self.rbtnTN.config(state="normal")
+            self.btnCekRec.config(state="normal")
         elif opsi == "disablebtn":
             self.btnDateCreate.config(state="disable")
             self.btnDateDone.config(state="disable")
             self.btnSave.config(state="disable")
             self.rbtnBM.config(state="disable")
             self.rbtnTN.config(state="disable")
+            self.btnCekRec.config(state="disable")
         elif opsi == "mainreadifca":
             self.entWo.config(state="readonly")
             self.entIfca.config(state="readonly")
@@ -576,7 +582,7 @@ class PageMain(tk.Frame):
         elif (ifca[:2] == "TN"):
             if (self.dept == "CS") or (self.dept == "RCP"):
                 if messagebox.askokcancel('Receive WO {}'.format(ifca),'WO sudah diterima?') == True: 
-                    self.doReceive(ifca)
+                    self.doReceive(self.idWO) # Update DATA berdasarkan ID wo
             else: messagebox.showerror(title="Receive WO {}".format(ifca), \
                                 message="WO TN hanya bisa diterima oleh RCP/CS")
         elif (ifca[:2] == "BM"):
@@ -586,7 +592,7 @@ class PageMain(tk.Frame):
                     messagebox.showerror(title="Replacing !", \
                                 message="WO Sudah diterima oleh {}".format(self.entRecBy.get()))
                 elif messagebox.askokcancel('Receive WO {}'.format(ifca),'WO sudah diterima?') == True: 
-                    self.doReceive(ifca)
+                    self.doReceive(self.idWO) # Update DATA berdasarkan ID wo
             else: messagebox.showerror(title="Receive WO {}".format(ifca), \
                                 message="WO BM hanya bisa diterima oleh DOCON/ENG")
         else: pass
@@ -594,7 +600,7 @@ class PageMain(tk.Frame):
     def doReceive(self,data):
         receiver = self.user + "." + self.dept
         tsekarang = datetime.now()
-        sql = "UPDATE logbook SET date_received=%s,received=%s,wo_receiver=%s WHERE no_ifca =%s"
+        sql = "UPDATE logbook SET date_received=%s,received=%s,wo_receiver=%s WHERE id =%s"
         val = (tsekarang,True,receiver,data)
         if (insert_data(sql,val)) == True:
             # messagebox.showinfo(title="Informasi", \
@@ -645,9 +651,14 @@ class PageMain(tk.Frame):
                     self.btnUpdate.config(state="normal")
                     self.btnDateDone.config(state="normal")
                 self.opsiStatus.current(0)
-            if data[10] == True and ifca_value[:2] == "TN":
+            if data[10] == True:
+                # self.btnCekRec.select() # .select()/.deselect() jika menggunakan Checkbutton()
+                self.varRec.set(1) # ttk.Checkbutton
                 # tidak dapat receive wo TN karena sudah direceive
-                self.btnReceived.config(state="disable")
+                if ifca_value[:2] == "TN": self.btnReceived.config(state="disable")
+            else: 
+                # self.btnCekRec.deselect()
+                self.varRec.set(0)
             if self.dept == "ROOT": # bisa edit untuk root
                 self.entrySet("enablebtn")
                 self.btnUpdate.config(state="normal")
@@ -659,15 +670,15 @@ class PageMain(tk.Frame):
 
     def onDelete(self):
         cIfca = self.entIfca.get()
-        if messagebox.askokcancel('Delete Data','WO dengan no {} akan dihapus?'.format(cIfca)) == True:
-            sql = "DELETE FROM logbook WHERE no_ifca =%s"
-            val = (cIfca,)
+        if messagebox.askokcancel('Delete Data','WO dengan no {0} #{1} akan dihapus?'.format(cIfca,self.idWO)) == True:
+            sql = "DELETE FROM logbook WHERE id =%s" # lebih spesifik dengan id WO
+            val = (self.idWO,)
             if (insert_data(sql,val)) == True:
                 sql = "DELETE FROM onprogress WHERE no_ifca =%s"
                 val = (cIfca,)
                 if (insert_data(sql,val)) == True:
                     self.onSearch() #update received sesuai tabel yg dicari
-                    messagebox.showinfo(title="Delete {}".format(cIfca), \
+                    messagebox.showinfo(title="Delete {0} #{1}".format(cIfca,self.idWO), \
                             message="Data sudah di hapus.")
         else: pass
 
@@ -794,8 +805,9 @@ class PageMain(tk.Frame):
             print("Tidak ada aktivitas perubahan")
         else:
             sql = "UPDATE logbook SET no_wo=%s,no_ifca=%s,date_create=%s,time_create=%s,unit=%s,work_req=%s,staff=%s,\
-                status_ifca=%s,date_done=%s,time_done=%s,work_act=%s,auth_login=%s WHERE id =%s"
-            val = (cWo,cIfca,cTglBuat,cJamBuat,cUnit,cWorkReq,cStaff,cStatus,cTglDone,jamdone,cWorkAct,self.user,self.idWO)
+                status_ifca=%s,date_done=%s,time_done=%s,work_act=%s,received=%s,wo_receiver=%s,auth_login=%s WHERE id =%s"
+            val = (cWo,cIfca,cTglBuat,cJamBuat,cUnit,cWorkReq,cStaff,cStatus,cTglDone,jamdone,\
+                cWorkAct,self.varRec.get(),self.entRecBy.get(),self.user,self.idWO)
             if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Informasi", \
                     message="Data sudah di terupdate.")
@@ -848,6 +860,6 @@ def testrun(user,dept):
 
 if __name__ == "__main__":
     from ttkthemes import ThemedTk
-    root = ThemedTk(theme='scidblue')
+    root = ThemedTk(theme='clearlooks')
     testrun("UkikLodom","ROOT")
     
