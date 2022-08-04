@@ -22,6 +22,7 @@ class PageMain(tk.Frame):
         self.parent = parent
         self.user = user
         self.dept = dept
+        self.online = datetime.now()
         imgdateset = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon-icons.com_date.png"))
         self.imgdateget = imgdateset.subsample(2, 2) # Resizing image by.subsample to fit on button
         self.btnselect = StringVar(parent,value="TN")
@@ -30,6 +31,18 @@ class PageMain(tk.Frame):
         self.komponenAtas()
         self.komponenTengah()
         self.komponenBawah()
+
+        self.parent.bind('<ButtonPress-1>', self.ceksesi)
+        self.topFrame.bind('<ButtonPress-1>', self.ceksesi)
+        self.midFrame.bind('<ButtonPress-1>', self.ceksesi)
+        self.botFrame.bind('<ButtonPress-1>', self.ceksesi)
+
+    def ceksesi(self,event=None):
+        from main import checksession
+        online = (str(self.online)[:-7])
+        if checksession(self.user,online) == False: # komparasi lastlogin db = program
+            self.parent.destroy() # Matikan program karena sesi berakhir
+            return False
 
     def komponenMain(self):
         self.topFrame = ttk.Frame(self)
@@ -357,6 +370,7 @@ class PageMain(tk.Frame):
             self.entCari.grid(row=2, column=2,sticky=W)
 
     def onSearch(self,event=None):
+        if self.ceksesi() == False: return # lakukan cek sesi
         self.entrySet("mainclear")
         self.opsiStatus.current(0)
         self.querySearch() # set dulu variabel self.sql dan self.val
@@ -699,7 +713,7 @@ class PageMain(tk.Frame):
         self.onSearch()
         self.auto_wo()
         self.entUnit.focus_set()
-        os.system("cls")
+        # os.system("cls")
 
     def onSave(self):
         cWo = self.checkwo(self.entWo.get()) # self.checkwo, jika salah return False
@@ -861,5 +875,4 @@ def testrun(user,dept):
 if __name__ == "__main__":
     from ttkthemes import ThemedTk
     root = ThemedTk(theme='clearlooks')
-    testrun("UkikLodom","ROOT")
-    
+    testrun("Owner","ROOT")

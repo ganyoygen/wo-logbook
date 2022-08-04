@@ -9,9 +9,9 @@ from page_progress import PageProg
 from page_user import UserMgmt
 from page_about import About
 from login import Login
-from sys_mysql import insert_data
+from sys_mysql import insert_data,getdata_one
 
-VERSION = "1.6.20"
+VERSION = "2.2-220805"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -61,10 +61,10 @@ class MainLog:
         footer.pack(fill=X,side=BOTTOM)
         WindowDraggable(frameWin)
         # Label(frameWin, text='Work Order Logbook Record',bg="#898",fg="white").pack(side=LEFT,padx=20)
-        Label(frameWin, text=("Login: {0}.{1}".format(self.user,self.dept)),bg="#898",fg="white").pack(side=LEFT,padx=20)
-        Button(frameWin, text="RELOG",command=self.relog,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
+        Label(frameWin, text=("Login: {0}.{1}".format(self.user,self.dept)),font='Helvetica 9 bold',bg="#898",fg="white").pack(side=LEFT,padx=20)
+        Button(frameWin, text="LOGOUT",command=self.relog,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
         Label(footer, text=("Work Order Manager Version: {0}".format(VERSION))).pack(side=LEFT,padx=10)
-        Label(footer, text=("Copyright © 2020 prasetya.angga.pares@gmail.com")).pack(side=RIGHT,padx=10)
+        Label(footer, text=("Copyright © 2020-2022 WOM, prasetya.angga.pares@gmail.com")).pack(side=RIGHT,padx=10)
         '''
         # Menghilangkan Frame windows
         buttonx = Button(frameWin, text="X",fg="white", bg="#FA8072", width=6, height=2,bd=0,\
@@ -83,7 +83,7 @@ class MainLog:
         self.notebook.add(page0, text="Main")
         self.notebook.add(page1, text="Progress")
         self.notebook.add(page2, text="User Mgmt")
-        self.notebook.add(self.page3, text="About")
+        self.notebook.add(self.page3, text="Profile")
         if self.dept != "ROOT": self.notebook.tab(2, state = 'disabled')
 
     def keluar(self,event=None):
@@ -109,7 +109,21 @@ class MainLog:
             else: return False
         except: # ijinkan exit saat login page (uid undefined)
             return True 
-                    
+
+def checksession(user,online):
+    sql = "SELECT * FROM acct WHERE username = %s"
+    val = (user,)
+    data = getdata_one(sql,val)
+    if str(data[9]) == str(online):
+        # print("last login match, session aman")
+        return True
+    else: 
+        # print("last login NOT match, kill session")
+        messagebox.showerror(title="WARNING: Double Login Detected!", \
+        message="Sesi anda telah berakhir.\
+            \r\n\r\nAccount [{0}] telah berhasil Login kembali di:\
+            \r\nHost: {1} \r\nJam: {2}".format(data[1],data[10],data[9]))
+        return False
 
 def start():
     global root

@@ -123,10 +123,23 @@ class Login(object):
                     messagebox.showerror(title="Account dikunci", \
                     message="Tidak dapat menggunakan program.\r\nAccount anda telah dikunci.")
                     return
-                if data[12] == None:
-                    messagebox.showerror(title="Double Login Warning!", \
-                    message="Tidak dapat login program.\r\nAccount anda sedang digunakan.")
-                    return
+                # if data[12] == None:
+                #     messagebox.showerror(title="Double Login Warning!", \
+                #     message="Tidak dapat login program.\r\nAccount anda sedang digunakan.")
+                #     return
+                if data[12] == None: # status Login: lastLogout = None
+                    if messagebox.askyesno('Double Login Warning!',
+                        "Account [{0}] sedang digunakan di [{1}]\r\nLogin sejak [{2}]\
+                        \r\n \
+                        \r\nAkhiri sesi dan login ulang?"\
+                        .format(user,data[10],data[9])) == True:
+                        print('user pilih yes')
+                        # return
+                    else: 
+                        print('user pilih no')
+                        return
+                # sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s,last_logout=%s WHERE uid=%s"
+                # val = (datetime.now(),host_name,host_ip,"",data[0])
                 sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s,last_logout=%s WHERE uid=%s"
                 val = (datetime.now(),host_name,host_ip,"",data[0])
                 if (insert_data(sql,val)) == True:
