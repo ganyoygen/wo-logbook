@@ -1,35 +1,49 @@
 Changelog
-WOM v1.6.20
+WOM v2.2-220805
+---------------------------------------
+1. [Double Login Bug] 
+ - User dapat login meskipun lastlogout = None. Jika terdapat double login,
+   ceksesi dilakukan, user yang tidak cocok program otomatis dibatalkan. 
+ * 545457fbf289ccbcfb7d6d40a5c5abeed8c47a7a
 =======================================
 
+WOM v2.1-220731
+---------------------------------------
+1. [PAGEMAIN] user ROOT dapat edit Received WO dan perb. cmd delete WO
+ * 362663882af0469945c8d9a4012b1919e0630daf
+=======================================
+
+WOM v2.0-220730
+---------------------------------------
+1. [PAGEMAIN] user ROOT dapat edit data IFCA 
+ * 21489344115ae4682fd6f973f73489dde39fda84
+=======================================
+
+WOM v1.06.20
+---------------------------------------
 1. Login dan Threading.
  - Login sebagai sub windows yang berjalan diatas main windows agar threading berjalan
  * cd421a04148d7ff902a0998bfde59178cddb1140
----------------------------------------
 
 2. Pencarian rentang tanggal sortir by IFCA terbaru.
  - Sebelumnya by date_create sehingga IFCA tersusun hanya tanggal yang sama
  * c583c2f67853200ec81db0923e4becbbe5d95cfd
----------------------------------------
 
 3. Handling Exit Program.
  a. Sub windows Login tidak dapat di close
  b. Exit Program hanya pada main windows dengan ask cancel
----------------------------------------
 
 4. Prevent Double Login.
  - Dengan tambahan struktur db akan dicatat last logout sebagai penanda login
----------------------------------------
 
 5. Shortcut Relog.
  - Ganti username dengan fungsi tombol relog pada header kanan main windows
----------------------------------------
 
 6. Tabel User Management.
  - Tambahan kolom last logout
-
-WOM v1.11.20
-* 6ea204b7e87e031e0ea01076967a3d4f97154546
 =======================================
 
-Beta Release
+WOM v1.11.20
+   Beta Release
+ * 6ea204b7e87e031e0ea01076967a3d4f97154546
+---------------------------------------
