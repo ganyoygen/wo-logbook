@@ -506,6 +506,7 @@ class PageMain(tk.Frame):
             insert = 0
             for rowno, row in enumerate(reader):
                 if (row[0].isdigit() == False): # abaikan selain index=digit
+                    progbar.bytes = rowno + 1 # tambah digit karena jumlah lines menghitung apapun
                     continue
                 if self.checkifca(row[2]) == False: #check IFCA, jika ada update aja
                     # print("IFCA",row[2],"Sudah terdaftar")
