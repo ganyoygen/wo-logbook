@@ -10,6 +10,7 @@ from tkinter.scrolledtext import ScrolledText
 from sys_mysql import getdata_one,getdata_all,insert_data
 from sys_date import GetDuration,PopupDateTime,CustomDateEntry,store_date,get_date
 from sys_progbar import SetProgBar
+from sys_pullwo import PullWoTable
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
 header_csv = ["Index","No WO","No IFCA","Tanggal Buat","Jam Buat","Unit",\
@@ -38,6 +39,9 @@ class PageMain(tk.Frame):
         self.botFrame.bind('<ButtonPress-1>', self.ceksesi)
 
     def ceksesi(self,event=None):
+        # # debug True (bypass ceksesi)
+        # return True
+        # # end debug
         from main import checksession
         online = (str(self.online)[:-7])
         if checksession(self.user,online) == False: # komparasi lastlogin db = program
@@ -182,6 +186,14 @@ class PageMain(tk.Frame):
             activebackground="#444",activeforeground="white")
         self.btnReceived.grid(row=1,column=5,pady=0,padx=5)
 
+        self.btnPull = Button(self.midFrame, text='PULL',\
+            command=self.getpull,\
+            state="normal", width=10,\
+            relief=RAISED, bd=2, \
+            bg="#558", fg="white", \
+            activebackground="#444",activeforeground="white")
+        self.btnPull.grid(row=1,column=6,pady=10,padx=5)
+
     def komponenBawah(self):
         # search and export
         row1 = ttk.Frame(self.botFrame)
@@ -242,6 +254,12 @@ class PageMain(tk.Frame):
         self.tabelIfca.configure(xscrollcommand=sbHor.set)
 
         self.onClear()
+
+    def getpull(self,event=None):
+        self.gopopup=PullWoTable(self.parent,self.user,self.dept)
+        self.btnPull["state"] = "disabled"
+        self.parent.wait_window(self.gopopup.top)
+        self.btnPull["state"] = "normal"
 
     def entrySet(self,opsi):
         # 1 on doubleclick main entry, normal
@@ -869,11 +887,14 @@ def testrun(user,dept):
     notebook = ttk.Notebook(root) # lihat, self.parent = root
     notebook.pack(fill="both", expand=True)
     notebook.add(PageMain(notebook,user,dept), text="Main")
-    root.title("Project Logbook by GanyoyGen")
+    root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
     root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
     root.mainloop()
 
 if __name__ == "__main__":
+    # PASTIKAN ceksesi dalam mode DEBUG
     from ttkthemes import ThemedTk
     root = ThemedTk(theme='clearlooks')
-    testrun("Owner","ROOT")
+    user = 'Owner'
+    dept = 'ENG'
+    testrun(user,dept)
