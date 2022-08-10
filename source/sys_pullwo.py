@@ -1,45 +1,16 @@
 import tkinter as tk
 import os
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk,messagebox
 from ttkwidgets import CheckboxTreeview
-from sys_mysql import getdata_one,getdata_all
 from ttkthemes import ThemedTk
+from datetime import datetime
+from sys_mysql import getdata_one,getdata_all,insert_data
 from sys_date import CustomDateEntry,store_date
+from sys_entry import LimitEntry
 
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
-
-class SelectPullWO(object):
-    def __init__(self,parent,dept):
-        top = self.top = Toplevel(parent)
-        top.title("Select WO")
-        top.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main2.ico"))
-        self.parent = parent
-        self.dept = dept
-        self.top.protocol("WM_DELETE_WINDOW", self.keluar)
-        self.btnWoSel = StringVar(parent,value="TN")
-        
-        self.komponen()
-
-    def komponen(self):
-        frm = ttk.Frame(top)
-        frm.grid(row=0,column=0)
-
-        ttk.Label(frm,text="Pilih tipe WO yang akan ditarik").grid(row=1,column=0,sticky=W)
-        self.rbtnTN = ttk.Radiobutton(frm, text="TN", variable=self.btnselect, value="TN", command=self.auto_ifca)
-        self.rbtnTN.grid(row=2, column=0,sticky=W)
-        self.rbtnBM = ttk.Radiobutton(frm, text="BM", variable=self.btnselect, value="BM", command=self.auto_ifca)
-        ttk.Label(frm, text="  /  ").grid(row=2,column=1,sticky=E)
-        self.rbtnBM.grid(row=2, column=2,sticky=W)
-
-        self.btnNext=ttk.Button(frm,text="Next",width=7,command=self.open_table)
-        self.btnNext.grid(row=3,column=1)
-        self.btnCancel=ttk.Button(frm,text="Cancel",width=7,command=self.keluar)
-        self.btnCancel.grid(row=3,column=2)
-
-    def keluar(self,event=None):
-        self.top.destroy()
 
 class PullWoTable(object):
     def __init__(self,parent,user,dept):
@@ -114,11 +85,11 @@ class PullWoTable(object):
         tblfrm = ttk.Frame(mainframe)
         tblfrm.grid(row=2,column=0)
 
-        self.rbtnTN = ttk.Radiobutton(btnfrm, text="TN", variable=self.btnWoSel, value="TN", command="self.auto_ifca")
-        self.rbtnTN.grid(row=1, column=1,sticky=W)
-        self.rbtnBM = ttk.Radiobutton(btnfrm, text="BM", variable=self.btnWoSel, value="BM", command="self.auto_ifca")
-        ttk.Label(btnfrm, text="  /  ").grid(row=1,column=2,sticky=E)
-        self.rbtnBM.grid(row=1, column=3,sticky=W)
+        self.rbtnTN = ttk.Radiobutton(btnfrm, text="TN", variable=self.btnWoSel, value="TN", command='self.showtable')
+        self.rbtnTN.grid(row=1, column=1,sticky=W,pady=10,padx=5)
+        self.rbtnBM = ttk.Radiobutton(btnfrm, text="BM", variable=self.btnWoSel, value="BM", command='self.showtable')
+        ttk.Label(btnfrm, text=" / ").grid(row=1,column=2,sticky=E)
+        self.rbtnBM.grid(row=1, column=3,sticky=W,pady=10,padx=5)
 
         self.opsicari = ttk.Combobox(btnfrm, \
             values = ["IFCA","Tanggal"], \
@@ -128,7 +99,7 @@ class PullWoTable(object):
         self.opsicari.bind('<<ComboboxSelected>>',self.boxsearchsel)
 
         self.entCari = ttk.Entry(btnfrm, width=20)
-        self.entCari.grid(row=1, column=5)
+        self.entCari.grid(row=1,column=5,pady=10,padx=5)
         self.dateStart = CustomDateEntry(btnfrm,width=10,locale='en_UK')
         self.dateEnd = CustomDateEntry(btnfrm,width=10,locale='en_UK')
         ttk.Label(btnfrm, text='~').grid(row=1,column=6)
@@ -176,7 +147,7 @@ class PullWoTable(object):
         self.table.column("Work Action", width=150,anchor="w")
         self.table.column("Tanggal Done", width=80,anchor="w")
         self.table.column("Jam Done", width=40,anchor="w")
-        self.table.column("Received", width=100,anchor="w")
+        self.table.column("Received", width=40,anchor="w")
 
         self.btnCheckDept(None)
         self.boxsearchsel(None)
@@ -198,29 +169,23 @@ class PullWoTable(object):
             self.entCari.delete(0, END)
             self.dateStart.grid_forget()
             self.dateEnd.grid_forget()
-            self.entCari.grid(row=1, column=5,sticky=W)
+            self.entCari.grid(row=1,column=5,pady=10,padx=5)
 
     def selectItem(self,event=None):
         pass
         # debug select item di tabel
         '''
         curItem = self.table.item(self.table.focus())
-        col = self.table.identify_column(event.x)
+        # col = self.table.identify_column(event.x)
+        col = int(self.table.identify_column(event.x)[1:])
         os.system("cls")
-        print ('curItem = ', curItem)
-        print ('col = ', col)
-        if col == '#0':
-            cell_value = curItem['text']
-        elif col == '#1':
-            cell_value = curItem['values'][0]
-        elif col == '#2':
-            cell_value = curItem['values'][1]
-        elif col == '#3':
-            cell_value = curItem['values'][2]
-        print ('cell_value = ', cell_value)
+        print ('curItem =', curItem)
+        print ('col =', col)
+        print ('cell_value =',curItem['values'][col-1])
+        print('Tags =',curItem['tags'][0])
         if curItem['values'][9] == False:
-            print('Received Belum diterima')
-        else: print('Wo Rec By:',curItem['values'][10])
+            print('WO belum pernah ditarik')
+        else: print('Wo Rec By =',curItem['values'][10])
         '''
 
     def showtable(self,event=None):
@@ -244,7 +209,7 @@ class PullWoTable(object):
                 # tampilkan data di tabel
                 self.table.insert('', 'end', text="",values=value[1:])
 
-        self.table.tag_configure("checked", background="gainsboro")
+        self.table.tag_configure("checked", background="light salmon")
         # self.table.tag_configure("unchecked", background="floral white")
 
     def querySearch(self):
@@ -288,17 +253,53 @@ class PullWoTable(object):
         self.top.destroy()
     
     def onReceived(self):
-        print("received clicked")
+        def doReceive(data):
+            sql = "UPDATE logbook SET date_received=%s,received=%s,wo_receiver=%s WHERE no_ifca =%s"
+            val = (tsekarang,True,receiver,data)
+            if (insert_data(sql,val)) == True: return True
+
+        receiver = self.user + "." + self.dept
+        tsekarang = datetime.now()
+        results = self.table.get_children() # dalam format [list]
+        i=0
+        if len(results) > 0:
+            for dat in results:
+                ifca = self.table.item(dat)['values'][1]
+                cek = self.table.item(dat)['tags'][0]
+                if cek == "unchecked": continue # skip yang tidak dicek
+                else: 
+                    if doReceive(ifca) == True: i+=1
+                    else: continue # lanjut, gagal update data
+            if i == 0: print("Tidak ada yang diceklis, results:",str(i))
+            else: 
+                messagebox.showinfo(title="Pull WO", \
+                    message="WO diterima [{0}]: {1} sheets".format(receiver,i))
+            self.showtable(None)
+        else: print("Tabel kosong, results:",len(results))
 
 
 class TestRun(object):
     def __init__(self,master):
         self.master=master
-        self.setbtn=ttk.Button(master,text="OpenTable",command=self.popup)
+        self.entUser = LimitEntry(master,width=20)
+        self.entUser.bind("<KeyRelease>", self.setuser)
+        self.entUser.pack()
+        self.opsidept = ttk.Combobox(master, \
+            values = ["ENG","DOCON","RCP","CS"], \
+            state="readonly",width=15)
+        self.opsidept.current(1)
+        self.opsidept.pack()
+        self.setbtn=ttk.Button(master,text="OpenTable",command=self.popup,width=10)
         self.setbtn.pack()
+        self.setbtn["state"] = "disabled"
+
+    def setuser(self,event):
+        s = event.widget
+        if len(s.get()) < 1: self.setbtn["state"] = "disabled"
+        else: self.setbtn["state"] = "normal"
 
     def popup(self):
-        self.gopopup=PullWoTable(self.master,"User","RCP")
+        self.gopopup=PullWoTable(self.master,self.entUser.get(),self.opsidept.get())
         self.setbtn["state"] = "disabled"
         self.master.wait_window(self.gopopup.top)
         self.setbtn["state"] = "normal"
