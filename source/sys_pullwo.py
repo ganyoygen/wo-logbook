@@ -192,11 +192,12 @@ class PullWoTable(object):
         self.table.delete(*self.table.get_children()) #refresh, hapus dulu tabel lama
         self.querySearch() # set dulu variabel self.sql dan self.val
         results = getdata_all(self.sql,self.val) # hasil dari query
-
+        tipe = str(self.btnWoSel.get()) # cek tipe wo
+        # Todo: cek ulang
         for value in results:
             dept = value[11].split(".")
-            if (self.dept == "DOCON" and value[10] == False):
-                # kondisi jika wo belum diterima pertama kali, skip for docon
+            if (self.dept == "DOCON" and value[10] == False and tipe != "BM"):
+                # kondisi jika wo belum diterima pertama kali, skip wo TN for docon
                 # print('skip ',value[2],' received:',value[10],'youre:',self.dept)
                 continue
             elif (len(dept) >= 2) and (dept[1] == "CS" or dept[1] == "RCP") and \
