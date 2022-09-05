@@ -11,7 +11,7 @@ from page_about import About
 from login import Login
 from sys_mysql import insert_data,getdata_one
 
-VERSION = "2.2-220805"
+VERSION = "3.0-220905"
 
 class WindowDraggable():
     def __init__(self, label):

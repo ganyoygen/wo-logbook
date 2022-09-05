@@ -1,4 +1,26 @@
 Changelog
+WOM v3.0-220905
+---------------------------------------
+1. [PAGEMAIN] Bug import 
+ - Perbaikan saat import tidak selesai jika ada line selain index dimanapun setelah header
+ * 51196334a8576d8928b7c772d34582a0841cec6a
+2. [PAGEMAIN] reception system pull wo
+ - Dapat menarik WO (STR WO) lebih dari 1 menggunakan tabel system pull
+ * 8d33d9cb90f256fd10635da84487b4449422cd4b
+3. [PAGEMAIN] Bug system pull wo
+ - Perbaikan show tabel pada user dept. docon
+ * 478e3d2ded2e68a2de04b360582c0db54a8c2068
+4. [SYSTEM][PAGEMAIN] API MSSQL
+ - API MSSQL untuk auto input new WO otomatis dari database IFCA
+ * bb584b524c5adaf0bc39f73cec8600305e2b0528
+5. [PAGEMAIN] Recoding Auto WO
+ - Perbaikan code Auto WO, perbaikan bug saat wo terakhir tanpa nomor
+ * e7b04a37129ffa170f4efdb49492d0857f33a6ed
+6. [PAGEMAIN] Perbaikan BUG Pending
+ - Perbaikan BUG saat update status Pending, menghindari multiple update db
+ * a5e30945ff633811f8d1596e4f5d19c970c0a030
+=======================================
+
 WOM v2.2-220805
 ---------------------------------------
 1. [Double Login Bug] 
