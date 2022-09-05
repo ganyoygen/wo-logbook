@@ -8,6 +8,7 @@ from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
 from sys_mysql import getdata_one,getdata_all,insert_data
+from sys_mssql import mssql_one
 from sys_date import GetDuration,PopupDateTime,CustomDateEntry,store_date,get_date
 from sys_progbar import SetProgBar
 from sys_pullwo import PullWoTable
@@ -24,8 +25,10 @@ class PageMain(tk.Frame):
         self.user = user
         self.dept = dept
         self.online = datetime.now()
-        imgdateset = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon-icons.com_date.png"))
+        imgdateset = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"date.png"))
         self.imgdateget = imgdateset.subsample(2, 2) # Resizing image by.subsample to fit on button
+        icosearch2 = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"search2.png"))
+        self.icosearch2 = icosearch2.subsample(2, 2) # Resizing image by.subsample to fit on button
         self.btnselect = StringVar(parent,value="TN")
 
         self.komponenMain()
@@ -69,12 +72,12 @@ class PageMain(tk.Frame):
         topleft.grid(row=1,column=1,sticky=W)
         ttk.Label(topleft, text='No WO').grid(row=0, column=0, sticky=W,padx=20)
         ttk.Label(topleft, text=':').grid(row=0, column=1, sticky=W,pady=5,padx=10)
-        self.entWo = ttk.Entry(topleft, width=20)
+        self.entWo = ttk.Entry(topleft, width=12)
         self.entWo.grid(row=0, column=2,sticky=W)
 
         ttk.Label(topleft, text="IFCA").grid(row=1, column=0, sticky=W,padx=20)
         ttk.Label(topleft, text=':').grid(row=1, column=1, sticky=W,pady=5,padx=10)
-        self.entIfca = ttk.Entry(topleft, width=15)
+        self.entIfca = ttk.Entry(topleft, width=12)
         self.entIfca.grid(row=1, column=2,sticky=W)
         radiobtn = ttk.Frame(topleft)
         radiobtn.grid(row=1,column=2)
@@ -84,6 +87,8 @@ class PageMain(tk.Frame):
         self.rbtnBM = ttk.Radiobutton(radiobtn, text="BM", variable=self.btnselect, value="BM", command=self.auto_ifca)
         ttk.Label(radiobtn, text="  /  ").grid(row=0,column=1,sticky=E)
         self.rbtnBM.grid(row=0, column=2,sticky=W)
+        self.btnSearchIfcaServ = Button(radiobtn,image=self.icosearch2,command=self.getDataIFCAServer)
+        self.btnSearchIfcaServ.grid(row=0, column=3,pady=10,padx=5)
 
         #tglbuat
         ttk.Label(topleft, text="Tanggal - Jam").grid(row=2, column=0, sticky=W,padx=20)
@@ -307,6 +312,7 @@ class PageMain(tk.Frame):
             self.rbtnBM.config(state="normal")
             self.rbtnTN.config(state="normal")
             self.btnCekRec.config(state="normal")
+            self.btnSearchIfcaServ.config(state="normal")
         elif opsi == "disablebtn":
             self.btnDateCreate.config(state="disable")
             self.btnDateDone.config(state="disable")
@@ -314,6 +320,7 @@ class PageMain(tk.Frame):
             self.rbtnBM.config(state="disable")
             self.rbtnTN.config(state="disable")
             self.btnCekRec.config(state="disable")
+            self.btnSearchIfcaServ.config(state="disable")
         elif opsi == "mainreadifca":
             self.entWo.config(state="readonly")
             self.entIfca.config(state="readonly")
@@ -453,6 +460,33 @@ class PageMain(tk.Frame):
         print("Get new ifca:",getNewIfca) 
         self.entIfca.delete(0, END)
         self.entIfca.insert(0,getNewIfca)
+        self.getDataIFCAServer()
+
+    def getDataIFCAServer(self,Event=None):
+        # sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = 'TN10029737'"
+        # sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = " + "'" +str(data) + "'"
+        sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = " + "'" +str(self.entIfca.get()) + "'"
+        data = mssql_one(sql)
+        if data != None: 
+            # print(data)
+            getdate, gettime = str(data[5]).split() #pisah tanggal dan jam
+            # print("Unit:",data[2])
+            # print("FullDate:",data[5])
+            # print("WorkReq:",data[9])
+            # print("Tanggal:",get_date(getdate))
+            # print("Jam:",gettime[:5]) # [:5] = hh:mm
+
+            self.entrySet("mainclear")
+            self.entIfca.insert(END, data[3])
+            self.entTglbuat.config(state="normal")
+            self.entJambuat.config(state="normal")
+            self.entTglbuat.insert(END, get_date(getdate))
+            self.entJambuat.insert(END, gettime[:5]) # [:5] = hh:mm
+            self.entTglbuat.config(state="readonly")
+            self.entJambuat.config(state="readonly")
+            self.entUnit.insert(END, data[2])
+            self.entWorkReq.insert(END, data[9])
+            self.auto_wo()
 
     def showtable(self,data):
         self.tabelIfca.delete(*self.tabelIfca.get_children()) #refresh, hapus dulu tabel lama

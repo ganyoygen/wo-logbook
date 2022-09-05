@@ -1,14 +1,17 @@
 import os
 import mysql.connector
+import pypyodbc # pip install pypyodbc
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk,Toplevel,messagebox
 from configparser import ConfigParser
 from sys_entry import LimitEntry
 from sys_mysql import read_db_config
+from sys_mssql import read_db_config_ms
 
 getfile = str(os.getcwd())+"\\"+"config.ini"
-section = 'mysql'
+secmysql = 'mysql'
+secmssql = 'mssql'
 
 class SetConfig(object):
     def __init__(self,parent):
@@ -17,11 +20,19 @@ class SetConfig(object):
         self.parent = parent
         topFr = ttk.Frame(top)
         topFr.grid(row=0,column=0)
+        ttk.Label(topFr,text="MySql WOM Db").grid(row=0,column=2,sticky=W)
         ttk.Label(topFr,text="Host").grid(row=1,column=1,sticky=W)
         ttk.Label(topFr,text="Port").grid(row=2,column=1,sticky=W)
         ttk.Label(topFr,text="Database").grid(row=3,column=1,sticky=W)
         ttk.Label(topFr,text="User").grid(row=4,column=1,sticky=W)
         ttk.Label(topFr,text="Password").grid(row=5,column=1,sticky=W)
+        
+        ttk.Label(topFr,text="MSSQL IFCA Db").grid(row=0,column=4,sticky=W)
+        ttk.Label(topFr,text="-").grid(row=1,column=3,sticky=W)
+        ttk.Label(topFr,text="-").grid(row=2,column=3,sticky=W)
+        ttk.Label(topFr,text="-").grid(row=3,column=3,sticky=W)
+        ttk.Label(topFr,text="-").grid(row=4,column=3,sticky=W)
+        ttk.Label(topFr,text="-").grid(row=5,column=3,sticky=W)
 
         self.entHost = LimitEntry(topFr,maxlen=16,width=20)
         self.entHost.grid(row=1, column=2)
@@ -34,12 +45,21 @@ class SetConfig(object):
         self.entPass = LimitEntry(topFr,maxlen=16,show='*',width=20)
         self.entPass.grid(row=5, column=2)
 
+        self.entMSHost = LimitEntry(topFr,maxlen=16,width=20)
+        self.entMSHost.grid(row=1, column=4)
+        self.entMSDb = LimitEntry(topFr,maxlen=16,width=20)
+        self.entMSDb.grid(row=3, column=4)
+        self.entMSUser = LimitEntry(topFr,maxlen=16,width=20)
+        self.entMSUser.grid(row=4, column=4)
+        self.entMSPass = LimitEntry(topFr,maxlen=16,show='*',width=20)
+        self.entMSPass.grid(row=5, column=4)
+        
         self.btnEdit=ttk.Button(topFr,text="Edit",width=7,command=self.edit_file)
         self.btnEdit.grid(row=6,column=1)
         self.btnSave=ttk.Button(topFr,text="Save",width=7,command=self.update_file)
         self.btnSave.grid(row=6,column=2)
         self.btnTest=ttk.Button(topFr,text="Test",width=7,command=self.test_conn)
-        self.btnTest.grid(row=6,column=3)
+        self.btnTest.grid(row=6,column=4)
 
         topFr.wait_visibility() # window needs to be visible for the grab
         topFr.grab_set()
@@ -87,24 +107,40 @@ class SetConfig(object):
             self.entDb.delete(0,END)
             self.entUser.delete(0,END)
             self.entPass.delete(0,END)
+            self.entMSHost.delete(0,END)
+            self.entMSDb.delete(0,END)
+            self.entMSUser.delete(0,END)
+            self.entMSPass.delete(0,END)
         elif opsi == "read":
             self.entHost.config(state="readonly")
             self.entPort.config(state="readonly")
             self.entDb.config(state="readonly")
             self.entUser.config(state="readonly")
             self.entPass.config(state="readonly")
+            self.entMSHost.config(state="readonly")
+            self.entMSDb.config(state="readonly")
+            self.entMSUser.config(state="readonly")
+            self.entMSPass.config(state="readonly")
         elif opsi == "disable":
             self.entHost.config(state="disable")
             self.entPort.config(state="disable")
             self.entDb.config(state="disable")
             self.entUser.config(state="disable")
             self.entPass.config(state="disable")
+            self.entMSHost.config(state="disable")
+            self.entMSDb.config(state="disable")
+            self.entMSUser.config(state="disable")
+            self.entMSPass.config(state="disable")
         elif opsi == "normal":
             self.entHost.config(state="normal")
             self.entPort.config(state="normal")
             self.entDb.config(state="normal")
             self.entUser.config(state="normal")
             self.entPass.config(state="normal")
+            self.entMSHost.config(state="normal")
+            self.entMSDb.config(state="normal")
+            self.entMSUser.config(state="normal")
+            self.entMSPass.config(state="normal")
         else: pass
 
     def test_conn(self):
@@ -125,16 +161,41 @@ class SetConfig(object):
         except mysql.connector.Error as err:
             messagebox.showerror(title="Error",parent=self.top,\
                 message="SQL Log: {}".format(err))
+        # Try connect MSSQL
+        try:
+            con = pypyodbc.connect(**read_db_config_ms())
+            # info = con.get_server_info()
+            # messagebox.showinfo(title="Version",parent=self.top,\
+            #     message="Connected to MSSQL Server version {}".format(info))
+            cur = con.cursor()
+            cur.execute("SELECT @@version;")
+            record = cur.fetchone()
+            messagebox.showinfo(title="Database",parent=self.top,\
+                message="You're connected to MSSQL: {}".format(record))
+            cur.close()
+            con.close()
+            messagebox.showinfo(title="Finish",parent=self.top,\
+                message="Checking finished, MSSQL connection is closed")
+        except pypyodbc.Error as err:
+            messagebox.showerror(title="Error",parent=self.top,\
+                message="SQL Log: {}".format(err))
 
     def write_file(self):
         config_object = ConfigParser()
-        config_object[section] = {
+        config_object[secmysql] = {
             "host": "Server IP",
             "port": "Port Address",
             "database": "db name",
             "user": "username",
             "password": "password",
             "autocommit":"True"
+            }
+        config_object[secmssql] = {
+            "driver": "{SQL Server Native Client 11.0}",
+            "server": "Server IP",
+            "database": "db name",
+            "uid": "username",
+            "pwd": "password",
             }
         #Write the above sections to config.ini file
         with open(getfile, 'w') as conf:
@@ -149,16 +210,22 @@ class SetConfig(object):
         #Read config.ini file
         config_object = ConfigParser()
         config_object.read(getfile)
-        if config_object.has_section(section):
-            userinfo = config_object[section]
+        if config_object.has_section(secmysql):
+            userinfo = config_object[secmysql]
             self.entHost.insert(END,userinfo["host"])
             self.entPort.insert(END,userinfo["port"])
             self.entDb.insert(END,userinfo["database"])
             self.entUser.insert(END,userinfo["user"])
             self.entPass.insert(END,userinfo["password"])
+        if config_object.has_section(secmssql):
+            userinfoms = config_object[secmssql]
+            self.entMSHost.insert(END,userinfoms["server"])
+            self.entMSDb.insert(END,userinfoms["database"])
+            self.entMSUser.insert(END,userinfoms["uid"])
+            self.entMSPass.insert(END,userinfoms["pwd"])
             self.entry_set("disable")
         else:
-            print('{0} not found in the {1} file'.format(section,getfile))
+            print('{0} not found in the {1} file'.format(secmysql,getfile))
             self.write_file()
 
     def edit_file(self,event=None):
@@ -172,13 +239,19 @@ class SetConfig(object):
         config_object = ConfigParser()
         config_object.read(getfile)
         #Get the section
-        update = config_object[section]
+        update = config_object[secmysql]
+        updatems = config_object[secmssql]
         #Update the items
         update["host"] = self.entHost.get()
         update["port"] = self.entPort.get()
         update["database"] = self.entDb.get()
         update["user"] = self.entUser.get()
         update["password"] = self.entPass.get()
+
+        updatems["server"] = self.entMSHost.get()
+        updatems["database"] = self.entMSDb.get()
+        updatems["uid"] = self.entMSUser.get()
+        updatems["pwd"] = self.entMSPass.get()
         #Write changes back to file
         with open(getfile, 'w') as conf:
             config_object.write(conf)
