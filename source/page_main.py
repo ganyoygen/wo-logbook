@@ -427,37 +427,39 @@ class PageMain(tk.Frame):
         else: pass
 
     def auto_wo(self):
-        sql = "SELECT no_wo FROM logbook"
-        val = ()
-        hasil = getdata_all(sql,val) # list wo dalam tupple
-        if len(hasil) <= 0: # prevent error jika belum ada data
-            hasil = "0"
-        lastwo = hasil[len(hasil)-1][0] # ambil last wo dari tupple terakhir dan ambil datanya
-        print("last Wo:",lastwo)
-        print("Jumlah Wo:",len(hasil)) # Jumlah wo didapat
-        if lastwo == "": newWoNum = "" # prevent error, ketika IFCA terakhir tanpa no. WO (blank)
-        else: newWoNum = (int(lastwo)+1) # cari wo, + 1
-        print("Get new Wo:",newWoNum)
-        self.entWo.delete(0, END)
-        if len(str(newWoNum)) <= 6:
-            self.entWo.insert(0, newWoNum)
+        lasttn = self.get_last_ifca("TN")
+        lastbm = self.get_last_ifca("BM")
+        sql = ("SELECT no_wo FROM logbook where no_ifca LIKE %s")
+        val = (lasttn,)
+        wotn = getdata_one(sql,val)
+        sql = ("SELECT no_wo FROM logbook where no_ifca LIKE %s")
+        val = (lastbm,)
+        wobm = getdata_one(sql,val)
+        maxwo = max(wotn[0],wobm[0])
+        if maxwo == "": newo = 1 #jika no wo kosong dari TN dan BM, set 1
+        else: newo = int(maxwo)+1 #setelah max dari TN dan BM, + 1
+        if len(str(newo)) <= 6:
+            self.entWo.insert(0, newo)
             self.entIfca.focus_set()
         else:
             messagebox.showwarning(title="Peringatan", \
                     message="maaf lebar data untuk no WO hanya sampai 6 digit")
 
+    def get_last_ifca(self,data):
+        sql = "SELECT MAX(no_ifca) FROM logbook WHERE no_ifca LIKE %s"
+        val = ("%{}%".format(data),)
+        hasil = getdata_all(sql,val) # max IFCA dalam tupple
+        return hasil[len(hasil)-1][0] # Max num ifca terakhir
+
     def auto_ifca(self):
         tipe = str(self.btnselect.get())
-        sql = "SELECT MAX(no_ifca) FROM logbook WHERE no_ifca LIKE %s"
-        val = ("%{}%".format(tipe),)
-        hasil = getdata_all(sql,val) # max IFCA dalam tupple
-        lastifca = hasil[len(hasil)-1][0] # Max num ifca terakhir
-        print("Last IFca:",lastifca)
+        lastifca = self.get_last_ifca(tipe)
         if lastifca == None: # prevent error jika belum ada data
             lastifca = "XX10000000"
+        # print("Last Ifca",lastifca)
         newIfcaNum = (int(lastifca[2:])+1) # cari lastifca, hapus tipe(BM/TN) + 1
         getNewIfca = tipe+str(newIfcaNum) # Ifca baru siap dipakai
-        print("Get new ifca:",getNewIfca) 
+        # print("Get new ifca:",getNewIfca) 
         self.entIfca.delete(0, END)
         self.entIfca.insert(0,getNewIfca)
         self.getDataIFCAServer()
