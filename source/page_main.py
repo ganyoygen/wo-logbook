@@ -811,6 +811,7 @@ class PageMain(tk.Frame):
         cStaff = self.entStaff.get().upper().strip()
         cStatus = self.opsiStatus.get()
         cTimeAcc = datetime.now()
+        curItem = self.tabelIfca.item(self.tabelIfca.focus())
         #panel kanan
         cWorkAct = self.entWorkAct.get('1.0', 'end').upper().strip()
         cTglDone = store_date(self.entTgldone.get()) #check tgl dulu
@@ -821,58 +822,58 @@ class PageMain(tk.Frame):
             self.entWorkReq.focus_set()
             self.entWorkReq.delete('1.0', 'end')
             return # stop aja karena cWorkAct tidak diisi
-        if cStatus == "DONE":
-            if len(cStaff) <= 0: 
-                messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
-                self.entStaff.focus_set()
-                self.entStaff.delete(0, END)
-                return # stop aja karena cStaff tidak diisi
-            elif len(cWorkAct) <= 0:
-                messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
-                self.entWorkAct.focus_set()
-                self.entWorkAct.delete('1.0', 'end')
-                return # stop aja karena cWorkAct tidak diisi
-            elif len(cTglDone) == 0 or len(jamdone.strip()) != 5:
-                messagebox.showerror(title="Error",message="Format tanggal salah")
-                return # stop aja karena tanggal tidak diisi
-            else : pass
-        elif cStatus == "PENDING":
-            cTglDone = ""
-            jamdone = ""
-            com_auth_by = cStaff+"@"+self.user
-            if len(cStaff) <= 0: 
-                messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
-                self.entStaff.focus_set()
-                self.entStaff.delete(0, END)
-                return # stop aja karena cStaff tidak diisi
-            elif len(cWorkAct) <= 0: 
-                messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
-                self.entWorkAct.focus_set()
-                self.entWorkAct.delete('1.0', 'end')
-                return # stop aja karena cWorkAct tidak diisi
-            else: ### jgn eksekusi sekarang mungkin?
-                sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login,auth_dept)"+\
-                "VALUES(%s,%s,%s,%s,%s,%s)"
-                val = (cIfca,cTimeAcc,cWorkAct,com_auth_by,self.user,self.dept)
-                print("Pending store data,",insert_data(sql,val))
-        elif cStatus == "CANCEL":
-            cTglDone = ""
-            jamdone = ""
-            if len(cWorkAct) <= 0: 
-                messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
-                self.entWorkAct.focus_set()
-                self.entWorkAct.delete('1.0', 'end')
-                return # stop aja karena cWorkAct tidak diisi
-        else : # UPDATE tidak perlu tanggal
-            cTglDone = ""
-            jamdone = ""
-        curItem = self.tabelIfca.item(self.tabelIfca.focus())
         if cWorkReq == curItem['values'][4] and \
             cStaff == curItem['values'][5] and \
             cWorkAct == curItem['values'][6] and \
             self.dept == "ENG": # penegasan, agar root dapat edit parameter lain
             print("Tidak ada aktivitas perubahan")
         else:
+            if cStatus == "DONE":
+                if len(cStaff) <= 0: 
+                    messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
+                    self.entStaff.focus_set()
+                    self.entStaff.delete(0, END)
+                    return # stop aja karena cStaff tidak diisi
+                elif len(cWorkAct) <= 0:
+                    messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
+                    self.entWorkAct.focus_set()
+                    self.entWorkAct.delete('1.0', 'end')
+                    return # stop aja karena cWorkAct tidak diisi
+                elif len(cTglDone) == 0 or len(jamdone.strip()) != 5:
+                    messagebox.showerror(title="Error",message="Format tanggal salah")
+                    return # stop aja karena tanggal tidak diisi
+                else : pass
+            elif cStatus == "PENDING":
+                cTglDone = ""
+                jamdone = ""
+                com_auth_by = cStaff+"@"+self.user
+                if len(cStaff) <= 0: 
+                    messagebox.showwarning(title="Peringatan",message="Staff ENG harus diisi.")
+                    self.entStaff.focus_set()
+                    self.entStaff.delete(0, END)
+                    return # stop aja karena cStaff tidak diisi
+                elif len(cWorkAct) <= 0: 
+                    messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
+                    self.entWorkAct.focus_set()
+                    self.entWorkAct.delete('1.0', 'end')
+                    return # stop aja karena cWorkAct tidak diisi
+                else: ### jgn eksekusi sekarang mungkin?
+                    sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login,auth_dept)"+\
+                    "VALUES(%s,%s,%s,%s,%s,%s)"
+                    val = (cIfca,cTimeAcc,cWorkAct,com_auth_by,self.user,self.dept)
+                    print("Pending store data,",insert_data(sql,val))
+            elif cStatus == "CANCEL":
+                cTglDone = ""
+                jamdone = ""
+                if len(cWorkAct) <= 0: 
+                    messagebox.showwarning(title="Peringatan",message="Work Action harus diisi.")
+                    self.entWorkAct.focus_set()
+                    self.entWorkAct.delete('1.0', 'end')
+                    return # stop aja karena cWorkAct tidak diisi
+            else : # UPDATE tidak perlu tanggal
+                cTglDone = ""
+                jamdone = ""
+
             sql = "UPDATE logbook SET no_wo=%s,no_ifca=%s,date_create=%s,time_create=%s,unit=%s,work_req=%s,staff=%s,\
                 status_ifca=%s,date_done=%s,time_done=%s,work_act=%s,received=%s,wo_receiver=%s,auth_login=%s WHERE id =%s"
             val = (cWo,cIfca,cTglBuat,cJamBuat,cUnit,cWorkReq,cStaff,cStatus,cTglDone,jamdone,\
