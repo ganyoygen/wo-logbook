@@ -9,9 +9,11 @@ from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
 from sys_mysql import getdata_one,getdata_all,insert_data
 from sys_mssql import mssql_one
-from sys_date import GetDuration,PopupDateTime,CustomDateEntry,store_date,get_date
+from sys_date import GetDuration,PopupDateTime,CustomDateEntry,store_date,get_date,GetSeconds
 from sys_progbar import SetProgBar
 from sys_pullwo import PullWoTable
+from sys_entry import CusHourEnt, CusDateEnt
+from ico_images import iconimage
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
 header_csv = ["Index","No WO","No IFCA","Tanggal Buat","Jam Buat","Unit",\
@@ -25,10 +27,7 @@ class PageMain(tk.Frame):
         self.user = user
         self.dept = dept
         self.online = datetime.now()
-        imgdateset = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"date.png"))
-        self.imgdateget = imgdateset.subsample(2, 2) # Resizing image by.subsample to fit on button
-        icosearch2 = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"search2.png"))
-        self.icosearch2 = icosearch2.subsample(2, 2) # Resizing image by.subsample to fit on button
+        self.icon = iconimage(self.parent)
         self.btnselect = StringVar(parent,value="TN")
 
         self.komponenMain()
@@ -70,12 +69,12 @@ class PageMain(tk.Frame):
         #samping kiri
         topleft = ttk.Frame(self.topFrame)
         topleft.grid(row=1,column=1,sticky=W)
-        ttk.Label(topleft, text='No WO').grid(row=0, column=0, sticky=W,padx=20)
+        ttk.Label(topleft, text='No WO').grid(row=0, column=0, sticky=W,padx=10)
         ttk.Label(topleft, text=':').grid(row=0, column=1, sticky=W,pady=5,padx=10)
         self.entWo = ttk.Entry(topleft, width=12)
         self.entWo.grid(row=0, column=2,sticky=W)
 
-        ttk.Label(topleft, text="IFCA").grid(row=1, column=0, sticky=W,padx=20)
+        ttk.Label(topleft, text="IFCA").grid(row=1, column=0, sticky=W,padx=10)
         ttk.Label(topleft, text=':').grid(row=1, column=1, sticky=W,pady=5,padx=10)
         self.entIfca = ttk.Entry(topleft, width=12)
         self.entIfca.grid(row=1, column=2,sticky=W)
@@ -85,34 +84,34 @@ class PageMain(tk.Frame):
         self.rbtnTN = ttk.Radiobutton(radiobtn, text="TN", variable=self.btnselect, value="TN", command=self.auto_ifca)
         self.rbtnTN.grid(row=0, column=0,sticky=W)
         self.rbtnBM = ttk.Radiobutton(radiobtn, text="BM", variable=self.btnselect, value="BM", command=self.auto_ifca)
-        ttk.Label(radiobtn, text="  /  ").grid(row=0,column=1,sticky=E)
+        ttk.Label(radiobtn, text="   ").grid(row=0,column=1,sticky=E)
         self.rbtnBM.grid(row=0, column=2,sticky=W)
-        self.btnSearchIfcaServ = Button(radiobtn,image=self.icosearch2,command=self.getDataIFCAServer)
-        self.btnSearchIfcaServ.grid(row=0, column=3,pady=10,padx=5)
+        self.btnSearchIfcaServ = Button(radiobtn,image=self.icon.icosearch2,command=self.getDataIFCAServer)
+        # self.btnSearchIfcaServ.grid(row=0, column=3,pady=5,padx=5)
 
         #tglbuat
-        ttk.Label(topleft, text="Tanggal - Jam").grid(row=2, column=0, sticky=W,padx=20)
+        ttk.Label(topleft, text="Tanggal - Jam").grid(row=2, column=0, sticky=W,padx=10)
         ttk.Label(topleft, text=':').grid(row=2, column=1, sticky=W,pady=5,padx=10)
         tglbuat = ttk.Frame(topleft)
         tglbuat.grid(row=2,column=2,sticky=W)
-        self.entTglbuat = ttk.Entry(tglbuat, width=10)
+        self.entTglbuat = CusDateEnt(tglbuat, width=10)
         self.entTglbuat.grid(row=1, column=0,sticky=W)
-        self.entJambuat = ttk.Entry(tglbuat,width=7)
+        self.entTglbuat.bind('<KeyRelease>',self.entTglbuat.keycheck)
+        self.entJambuat = CusHourEnt(tglbuat,width=7)
+        self.entJambuat.bind("<KeyRelease>", self.entJambuat.hour_24)
         self.entJambuat.grid(row=1, column=1,sticky=W)
-        self.btnDateCreate = Button(tglbuat,image=self.imgdateget,command=self.onDateCreate)
-        self.btnDateCreate.grid(row=1, column=2,pady=10,padx=5)
 
-        ttk.Label(topleft, text="Unit").grid(row=3, column=0, sticky=W,padx=20)
+        ttk.Label(topleft, text="Unit").grid(row=3, column=0, sticky=W,padx=10)
         ttk.Label(topleft, text=':').grid(row=3, column=1, sticky=W,pady=5,padx=10)             
-        self.entUnit = ttk.Entry(topleft, width=15)
+        self.entUnit = ttk.Entry(topleft, width=12)
         self.entUnit.grid(row=3, column=2,sticky=W)
 
-        ttk.Label(topleft, text="Work Request").grid(row=4, column=0, sticky=NW,padx=20)
+        ttk.Label(topleft, text="Work Request").grid(row=4, column=0, sticky=NW,padx=10)
         ttk.Label(topleft, text=':').grid(row=4, column=1, sticky=NW,padx=10,pady=6)
         self.entWorkReq = ScrolledText(topleft,height=4,width=35)
         self.entWorkReq.grid(row=4, column=2,sticky=W)
 
-        ttk.Label(topleft, text="Staff").grid(row=5, column=0, sticky=W,padx=20)
+        ttk.Label(topleft, text="Staff").grid(row=5, column=0, sticky=W,padx=10)
         ttk.Label(topleft, text=':').grid(row=5, column=1, sticky=W,pady=5,padx=10)
         self.entStaff = ttk.Entry(topleft, width=20)
         self.entStaff.grid(row=5, column=2,sticky=W)
@@ -120,34 +119,38 @@ class PageMain(tk.Frame):
         #samping kanan
         topright = ttk.Frame(self.topFrame)
         topright.grid(row=1,column=2,sticky=W)
-        ttk.Label(topright, text="").grid(row=0, column=0, sticky=W,pady=5,padx=20)
-        ttk.Label(topright, text="").grid(row=1, column=0, sticky=W,pady=5,padx=20)
-        ttk.Label(topright, text="Status").grid(row=2, column=0, sticky=W,pady=5,padx=20)
+        ttk.Label(topright, text="").grid(row=0, column=0, sticky=W,pady=5,padx=10)
+        ttk.Label(topright, text="").grid(row=1, column=0, sticky=W,pady=5,padx=10)
+        ttk.Label(topright, text="Status").grid(row=2, column=0, sticky=W,pady=5,padx=10)
         ttk.Label(topright, text=':').grid(row=2, column=1, sticky=W,pady=5,padx=10)
 
+        self.woStatus = tk.StringVar()
         self.opsiStatus = ttk.Combobox(topright, \
+            textvariable = self.woStatus, \
             values = ["","DONE","CANCEL","PENDING"],\
             state="readonly", width=10)
         self.opsiStatus.current(0)
         self.opsiStatus.grid(row=2, column=2,sticky=W)
 
-        ttk.Label(topright, text="Tanggal - Jam").grid(row=3, column=0, sticky=W,padx=20)
+        ttk.Label(topright, text="Tanggal - Jam").grid(row=3, column=0, sticky=W,padx=10)
         ttk.Label(topright, text=':').grid(row=3, column=1, sticky=W,pady=5,padx=10)             
         tgldone = ttk.Frame(topright)
         tgldone.grid(row=3,column=2,sticky=W)
-        self.entTgldone = ttk.Entry(tgldone, width=10)
+        self.entTgldone = CusDateEnt(tgldone, width=10)
         self.entTgldone.grid(row=0, column=0,sticky=W)
-        self.entJamdone = ttk.Entry(tgldone, width=7)
+        self.entTgldone.bind('<KeyRelease>',self.entTgldone.keycheck)
+        self.entJamdone = CusHourEnt(tgldone,width=7)
+        self.entJamdone.bind("<KeyRelease>", self.entJambuat.hour_24)
         self.entJamdone.grid(row=0, column=1,sticky=W)
-        self.btnDateDone = Button(tgldone,image=self.imgdateget,command=self.onDateDone)
-        self.btnDateDone.grid(row=0, column=2,pady=10,padx=5)
+        self.btnDateDone = Button(tgldone,image=self.icon.imgdateget,command=self.onDateDone)
+        self.btnDateDone.grid(row=0, column=2,padx=5)
 
-        ttk.Label(topright, text="Work Action").grid(row=4, column=0, sticky=NW,padx=20)
+        ttk.Label(topright, text="Work Action").grid(row=4, column=0, sticky=NW,padx=10)
         ttk.Label(topright, text=':').grid(row=4, column=1, sticky=NW,padx=10,pady=6)
         self.entWorkAct = ScrolledText(topright,height=4,width=35)
         self.entWorkAct.grid(row=4, column=2,sticky=W)
                 
-        ttk.Label(topright, text="Received").grid(row=5, column=0, sticky=W,padx=20)
+        ttk.Label(topright, text="Received").grid(row=5, column=0, sticky=W,padx=10)
         ttk.Label(topright, text=':').grid(row=5, column=1, sticky=W,pady=5,padx=10)
         recentry = ttk.Frame(topright)
         recentry.grid(row=5,column=2,sticky=W)
@@ -161,43 +164,35 @@ class PageMain(tk.Frame):
 
     def komponenTengah(self):
         #panel button
-        self.btnClear = Button(self.midFrame, text='New',\
-            command=self.onClear, width=10,\
-            relief=RAISED, bd=2, bg="#666", fg="white",\
-            activebackground="#444",activeforeground="white")
-        self.btnClear.grid(row=1, column=1,pady=0,padx=5)
+        self.btnClear = ttk.Button(self.midFrame, text='New',\
+            command=self.onClear, width=6,\
+            image=self.icon.iconew,compound=tk.LEFT)
+        self.btnClear.grid(row=1, column=1,padx=5,pady=5)
 
-        self.btnSave = Button(self.midFrame, text='Save',\
-            command=self.onSave, width=10,\
-            relief=RAISED, bd=2, bg="#666", fg="white",\
-            activebackground="#444",activeforeground="white" )
-        self.btnSave.grid(row=1,column=2,pady=0,padx=5)
+        self.btnSave = ttk.Button(self.midFrame, text='Save',\
+            command=self.onSave, width=6,\
+            image=self.icon.icosave,compound=tk.LEFT)
+        self.btnSave.grid(row=1,column=2,padx=5,pady=5)
 
-        self.btnUpdate = Button(self.midFrame, text='Update',\
-            command=self.onUpdate,state="disable", width=10,\
-            relief=RAISED, bd=2, bg="#666", fg="white",\
-            activebackground="#444",activeforeground="white")
-        self.btnUpdate.grid(row=1,column=3,pady=0,padx=5)
+        self.btnUpdate = ttk.Button(self.midFrame, text='Update',\
+            command=self.onUpdate,state="disable", width=6,\
+            image=self.icon.icoupdt,compound=tk.LEFT)
+        self.btnUpdate.grid(row=1,column=3,padx=5,pady=5)
 
-        self.btnDelete = Button(self.midFrame, text='Delete',\
-            command=self.onDelete,state="disable", width=10,\
-            relief=RAISED, bd=2, bg="#FC6042", fg="white",\
-            activebackground="#444",activeforeground="white")
-        self.btnDelete.grid(row=1,column=4,pady=0,padx=5)
+        self.btnDelete = ttk.Button(self.midFrame, text='Delete',\
+            command=self.onDelete,state="disable", width=6,\
+            image=self.icon.icodel,compound=tk.LEFT)
+        self.btnDelete.grid(row=1,column=4,padx=5,pady=5)
 
-        self.btnReceived = Button(self.midFrame, text='Received',\
-            command=self.onReceived,state="disable", width=10,\
-            relief=RAISED, bd=2, bg="#667", fg="white",\
-            activebackground="#444",activeforeground="white")
-        self.btnReceived.grid(row=1,column=5,pady=0,padx=5)
+        self.btnReceived = ttk.Button(self.midFrame, text='Received',\
+            command=self.onReceived,state="disable", width=6,\
+            image=self.icon.icorcv,compound=tk.LEFT)
+        self.btnReceived.grid(row=1,column=5,padx=5,pady=5)
 
-        self.btnPull = Button(self.midFrame, text='PULL',\
-            command=self.getpull,\
-            state="normal", width=10,\
-            relief=RAISED, bd=2, \
-            bg="#558", fg="white", \
-            activebackground="#444",activeforeground="white")
-        self.btnPull.grid(row=1,column=6,pady=10,padx=5)
+        self.btnPull = ttk.Button(self.midFrame, text='Collect',\
+            command=self.getpull, width=6,\
+            image=self.icon.icopull,compound=tk.LEFT)
+        self.btnPull.grid(row=1,column=6,padx=5,pady=5)
 
     def komponenBawah(self):
         # search and export
@@ -218,31 +213,30 @@ class PageMain(tk.Frame):
         self.entCari.bind('<Return>',self.onSearch)
         self.dateStart.bind('<Return>',self.onSearch)
         self.dateEnd.bind('<Return>',self.onSearch)
+        self.dateStart.bind("<KeyRelease>", self.dateStart.keycheck)
+        self.dateEnd.bind("<KeyRelease>", self.dateEnd.keycheck)
 
         # self.entCari.bind('<KeyRelease>',self.onSearch) #cari saat input apapun
         
-        self.btnSearch = Button(row1, text='Search',\
-            command=self.onSearch,\
-            state="normal", width=10,\
-            relief=RAISED, bd=2, bg="#667", fg="white",\
-            activebackground="#444",activeforeground="white")
-        self.btnSearch.grid(row=2,column=6,pady=10,padx=5)
+        self.btnSearch = ttk.Button(row1, text='Search',\
+            command=self.onSearch,width=6,\
+            image=self.icon.icosrctab,compound=tk.LEFT)
+        self.btnSearch.grid(row=2,column=6,pady=5,padx=5)
 
-        self.btnMainExp = Button(row1, text='Export',\
-            command=self.onMainExport,\
-            state="normal", width=10,\
-            relief=RAISED, bd=2, \
-            bg="#558", fg="white", \
-            activebackground="#444",activeforeground="white")
-        self.btnMainExp.grid(row=2,column=7,pady=10,padx=5)
+        self.btnMainExp = ttk.Button(row1, text='Export',\
+            command=self.onMainExport,width=6,\
+            image=self.icon.icoexpxl,compound=tk.LEFT)
+        self.btnMainExp.grid(row=2,column=7,padx=5,pady=5)
 
-        self.btnImportCsv = Button(row1, text='Import',\
-            command=self.onImport_csv,\
-            state="normal", width=10,\
-            relief=RAISED, bd=2, \
-            bg="#558", fg="white", \
-            activebackground="#444",activeforeground="white")
-        self.btnImportCsv.grid(row=2,column=8,pady=10,padx=5)
+        self.btnImportCsv = ttk.Button(row1, text='Import',\
+            command=self.onImport_csv,width=6,\
+            image=self.icon.icoimport,compound=tk.LEFT)
+        self.btnImportCsv.grid(row=2,column=8,padx=5,pady=5)
+
+        self.btnSyncIfca = ttk.Button(row1, text='Sync',\
+            command=self.syncIfca,width=6,\
+            image=self.icon.icodbsyn,compound=tk.LEFT)
+        self.btnSyncIfca.grid(row=2,column=9,padx=5,pady=5)
 
         #tabel
         listifca = ttk.Frame(self.botFrame)
@@ -298,37 +292,39 @@ class PageMain(tk.Frame):
             self.rbtnTN.grid(row=0, column=0,sticky=W)
             self.rbtnBM.grid(row=0, column=2,sticky=W)
             # A. readonly aja, input pake popup
-            self.entTglbuat.config(state="readonly")
-            self.entJambuat.config(state="readonly")
-            self.entTgldone.config(state="readonly")
-            self.entJamdone.config(state="readonly")
+            # self.entTglbuat.config(state="readonly")
+            # self.entJambuat.config(state="readonly")
+            # self.entTgldone.config(state="readonly")
+            # self.entJamdone.config(state="readonly")
             # A #
             self.varRec.set(0)
         # mainentry readonly panel kiri kecuali work req dan staff
         elif opsi == "enablebtn":
-            self.btnDateCreate.config(state="normal")
             self.btnDateDone.config(state="normal")
             self.btnSave.config(state="normal")
             self.rbtnBM.config(state="normal")
             self.rbtnTN.config(state="normal")
             self.btnCekRec.config(state="normal")
-            self.btnSearchIfcaServ.config(state="normal")
+            # self.btnSearchIfcaServ.config(state="normal")
+            self.btnSearchIfcaServ.grid(row=0,column=3,padx=5)
         elif opsi == "disablebtn":
-            self.btnDateCreate.config(state="disable")
             self.btnDateDone.config(state="disable")
             self.btnSave.config(state="disable")
             self.rbtnBM.config(state="disable")
             self.rbtnTN.config(state="disable")
             self.btnCekRec.config(state="disable")
-            self.btnSearchIfcaServ.config(state="disable")
+            # self.btnSearchIfcaServ.config(state="disable")
+            self.btnSearchIfcaServ.grid_forget()
         elif opsi == "mainreadifca":
             self.entWo.config(state="readonly")
             self.entIfca.config(state="readonly")
             self.entTglbuat.config(state="readonly")
             self.entJambuat.config(state="readonly")
             self.entUnit.config(state="readonly")
-            self.entTgldone.config(state="readonly")
-            self.entJamdone.config(state="readonly")
+            # print('status wo:',self.woStatus.get())
+            if self.woStatus.get() != "":
+                self.entTgldone.config(state="readonly")
+                self.entJamdone.config(state="readonly")
             self.entRecBy.config(state="readonly")
             self.entRecDate.config(state="readonly")
             self.rbtnTN.grid_forget()
@@ -489,6 +485,48 @@ class PageMain(tk.Frame):
             self.entUnit.insert(END, data[2])
             self.entWorkReq.insert(END, data[9])
             self.auto_wo()
+        else: self.entrySet("mainclear")
+
+    def syncIfca(self,Event=None): #sync work request, unit, and date with IFCA from table
+        # section return (abort)
+        if (self.dept != "ROOT"):
+            messagebox.showerror(title="Prohibited", \
+                message="Synchronization of work requests from IFCA to WOM is reserved for Administrator")
+            # self.btnSyncIfca.grid_forget()
+            return
+        Thread(target=self.proses_syncIfca).start()
+
+    def proses_syncIfca(self):
+        # section processing
+        start = time.perf_counter()
+        results = self.tabelIfca.get_children() # dalam format [list]
+        if len(results) > 0:
+            progbar = SetProgBar(self.parent,len(results))
+            update=0
+            for dat in results:
+                progbar.bytes += 1
+                value = self.tabelIfca.item(dat)['values']
+                value.insert(0,update) # tambah nomor colom pertama
+                sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = " + "'" +value[2] + "'"
+                data = mssql_one(sql)
+                if data != None: 
+                    getdate, gettime = str(data[5]).split() #pisah tanggal dan jam
+                    sql = "UPDATE logbook SET date_create=%s,time_create=%s,unit=%s,work_req=%s WHERE no_ifca =%s"
+                    val = (store_date(get_date(getdate)),gettime[:5],data[2],data[9],value[2])
+                    if (insert_data(sql,val)) == True:
+                        update += 1
+                    else:
+                        messagebox.showerror(title="Sync File Error", \
+                            message="Fail on Update {}".format(value[2]))
+                else: print("Warning: Tidak ditemukan database IFCA untuk",value[2])
+            finish = time.perf_counter()
+            usedsecs = finish-start
+            if usedsecs > 60: usedsecs = GetDuration(usedsecs).value
+            messagebox.showinfo(title="Import File Result", \
+                message="Update IFCA: {0}/{1}\r\nTime Used: {2}"\
+                    .format(update,len(results),usedsecs))
+            self.onSearch() #Refresh table by search
+        else: print("result:",len(results))
 
     def showtable(self,data):
         self.tabelIfca.delete(*self.tabelIfca.get_children()) #refresh, hapus dulu tabel lama
@@ -841,7 +879,18 @@ class PageMain(tk.Frame):
                     return # stop aja karena cWorkAct tidak diisi
                 elif len(cTglDone) == 0 or len(jamdone.strip()) != 5:
                     messagebox.showerror(title="Error",message="Format tanggal salah")
+                    self.entTgldone.focus_set()
                     return # stop aja karena tanggal tidak diisi
+                elif len(cTglBuat) == 0 or len(cJamBuat.strip()) != 5:
+                    messagebox.showerror(title="Error",message="Format tanggal salah")
+                    self.entTglbuat.focus_set()
+                    return
+                #cek selisih antara done dan buat
+                elif GetSeconds(str(cTglDone + " " + jamdone)).value - \
+                    GetSeconds(str(cTglBuat + " " + cJamBuat)).value < 300:
+                    messagebox.showerror(title="Error",message="Waktu untuk menyelesaikan WO minimal 5 menit")
+                    self.entJamdone.focus_set()
+                    return
                 else : pass
             elif cStatus == "PENDING":
                 cTglDone = ""
@@ -883,25 +932,6 @@ class PageMain(tk.Frame):
                     message="Data sudah di terupdate.")
                 self.onSearch()
 
-    def onDateCreate(self):
-        setdate = PopupDateTime(self.parent)
-        setdate.parent.wait_window(setdate.top)
-        if len(setdate.value.strip()) > 0: 
-            # output <tanggal> <jam>, lanjutkan perintah
-            getdate, gettime = setdate.value.split() #pisah tanggal dan jam
-            self.entTglbuat.config(state="normal")
-            self.entJambuat.config(state="normal")
-            self.entTglbuat.delete(0, END)
-            self.entJambuat.delete(0, END)
-            self.entTglbuat.insert(END, getdate)
-            self.entJambuat.insert(END, gettime)
-            self.entTglbuat.config(state="readonly")
-            self.entJambuat.config(state="readonly")
-            self.entUnit.focus_set()
-        else: 
-            # output kosong, batalkan perintah
-            pass
-
     def onDateDone(self):
         setdate = PopupDateTime(self.parent)
         setdate.parent.wait_window(setdate.top)
@@ -932,6 +962,6 @@ if __name__ == "__main__":
     # PASTIKAN ceksesi dalam mode DEBUG
     from ttkthemes import ThemedTk
     root = ThemedTk(theme='clearlooks')
-    user = 'Owner'
-    dept = 'ENG'
+    user = 'Debug'
+    dept = 'ROOT'
     testrun(user,dept)

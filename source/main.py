@@ -10,8 +10,10 @@ from page_user import UserMgmt
 from page_about import About
 from login import Login
 from sys_mysql import insert_data,getdata_one
+from sys_date import RunClock
+from ico_images import iconimage
 
-VERSION = "3.0-220905"
+VERSION = "4.0-2309RC"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -38,6 +40,7 @@ class MainLog:
         self.parent = parent
         self.user = ""
         self.dept = ""
+        self.icon = iconimage(self.parent)
         self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
         lebar=1100
         tinggi=680
@@ -60,11 +63,14 @@ class MainLog:
         footer = Frame(self.parent)
         footer.pack(fill=X,side=BOTTOM)
         WindowDraggable(frameWin)
-        # Label(frameWin, text='Work Order Logbook Record',bg="#898",fg="white").pack(side=LEFT,padx=20)
-        Label(frameWin, text=("Login: {0}.{1}".format(self.user,self.dept)),font='Helvetica 9 bold',bg="#898",fg="white").pack(side=LEFT,padx=20)
-        Button(frameWin, text="LOGOUT",command=self.relog,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
+        Label(frameWin, text=("Login: {0}.{1}".format(self.user,self.dept)),font='Helvetica 9 bold',bg="#898",fg="white").pack(side=LEFT,padx=10)
+        LabelJam = Label(frameWin ,font='Helvetica 9 bold',bg="#898",fg="white")
+        LabelJam.pack(side=LEFT,padx=20)
+        self.runclock = RunClock(frameWin,LabelJam)  # tampilkan jam aktual di label 
+        # Button(frameWin, text="LOGOUT",command=self.relog,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
+        Button(frameWin, text="LOGOUT",image=self.icon.iclogout,command=self.relog,compound=LEFT,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
         Label(footer, text=("Work Order Manager Version: {0}".format(VERSION))).pack(side=LEFT,padx=10)
-        Label(footer, text=("Copyright © 2020-2022 WOM, prasetya.angga.pares@gmail.com")).pack(side=RIGHT,padx=10)
+        Label(footer, text=("Copyright © 2020-2023 WOM, prasetya.angga.pares@gmail.com")).pack(side=RIGHT,padx=10)
         '''
         # Menghilangkan Frame windows
         buttonx = Button(frameWin, text="X",fg="white", bg="#FA8072", width=6, height=2,bd=0,\
@@ -98,6 +104,7 @@ class MainLog:
                 self.updateUser()
             else:
                 self.parent.destroy()
+                self.runclock.keluar()
                 start()
     
     def updateUser(self):

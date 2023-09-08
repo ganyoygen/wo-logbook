@@ -8,7 +8,7 @@ from datetime import datetime
 from sys_mysql import getdata_one,getdata_all,insert_data
 from sys_date import CustomDateEntry,store_date
 from sys_entry import LimitEntry
-
+from ico_images import iconimage
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
 
@@ -20,6 +20,7 @@ class PullWoTable(object):
         self.parent = parent
         self.user = user
         self.dept = dept
+        self.icon = iconimage(self.parent)
         self.top.protocol("WM_DELETE_WINDOW", self.keluar)
 
         if self.dept == "ENG":
@@ -88,14 +89,14 @@ class PullWoTable(object):
         self.rbtnTN = ttk.Radiobutton(btnfrm, text="TN", variable=self.btnWoSel, value="TN", command='self.showtable')
         self.rbtnTN.grid(row=1, column=1,sticky=W,pady=10,padx=5)
         self.rbtnBM = ttk.Radiobutton(btnfrm, text="BM", variable=self.btnWoSel, value="BM", command='self.showtable')
-        ttk.Label(btnfrm, text=" / ").grid(row=1,column=2,sticky=E)
+        ttk.Label(btnfrm, text=" ").grid(row=1,column=2,sticky=E)
         self.rbtnBM.grid(row=1, column=3,sticky=W,pady=10,padx=5)
 
         self.opsicari = ttk.Combobox(btnfrm, \
             values = ["IFCA","Tanggal"], \
             state="readonly", width=10)
         self.opsicari.current(1)
-        self.opsicari.grid(row=1, column=4,sticky=W)
+        self.opsicari.grid(row=1,column=4,padx=5,sticky=W)
         self.opsicari.bind('<<ComboboxSelected>>',self.boxsearchsel)
 
         self.entCari = ttk.Entry(btnfrm, width=20)
@@ -106,10 +107,14 @@ class PullWoTable(object):
         self.entCari.bind('<Return>',self.showtable)
         self.dateStart.bind('<Return>',self.showtable)
         self.dateEnd.bind('<Return>',self.showtable)
+        self.dateStart.bind("<KeyRelease>", self.dateStart.keycheck)
+        self.dateEnd.bind("<KeyRelease>", self.dateEnd.keycheck)
 
-        self.btnSearch=ttk.Button(btnfrm,text="Search",command=self.showtable,width=10)
+        self.btnSearch=ttk.Button(btnfrm,text="Search",command=self.showtable,\
+            width=6, image=self.icon.icosrctab,compound=tk.LEFT)
         self.btnSearch.grid(row=1,column=8,pady=10,padx=5)
-        self.btnReceived=ttk.Button(btnfrm,text="Received",command=self.onReceived,width=10)
+        self.btnReceived=ttk.Button(btnfrm,text="Received",command=self.onReceived,\
+            width=6, image=self.icon.icorcv,compound=tk.LEFT)
         self.btnReceived.grid(row=1,column=9,pady=10,padx=5)
 
         style = ttk.Style(self.parent)

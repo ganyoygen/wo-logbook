@@ -1,7 +1,7 @@
 import os
 import sys
 import tkinter as tk
-from tkinter import ttk, Toplevel
+from tkinter import ttk,Toplevel,StringVar
 from tkcalendar import DateEntry
 from datetime import datetime
 
@@ -70,15 +70,69 @@ class GetDuration():
         else:
             self.value = "{0} hari, {1} jam, {2} menit.".format(int(days),int(hours),int(minutes))
 
+class RunClock():
+    def __init__(self,parent,label):
+        self.parent = parent
+        self.lab = label
+        self.clock()
+    def clock(self):
+        now = datetime.now()
+        time = now.strftime("%d/%m/%Y, %H:%M:%S")
+        self.lab.config(text=time)
+        #lab['text'] = time
+        self.after = self.parent.after(10, self.clock)
+    def keluar(self):
+        print("Cancel all scheduled callbacks and quit.")
+        self.parent.after_cancel(self.after)
+
 class CustomDateEntry(DateEntry):
-    def _select(self, event=None):
-        date = self._calendar.selection_get()
-        if date is not None:
-            self._set_text(date.strftime('%d-%m-%Y'))
-            self.event_generate('<<DateEntrySelected>>')
-        self._top_cal.withdraw()
-        if 'readonly' not in self.state():
-            self.focus_set()
+    def __init__(self,parent,maxlen=10,**kw):
+        self.parent = parent
+        self.maxlen = maxlen
+        self.sv = sv = StringVar(parent)
+        sv.trace("w", lambda name, index, mode, sv=sv: self.callback(sv))
+        DateEntry.__init__(self,parent,textvariable=sv,**kw)
+
+    def callback(self,sv):
+        if len(sv.get()) > self.maxlen: self.bell()
+        sv.set(sv.get()[0:self.maxlen].replace(" ", ""))
+        sv.set(sv.get()[0:self.maxlen].replace("/", "-"))
+
+        tgl = sv.get()[:2]
+        bln = sv.get()[3:5]
+        thn = sv.get()[6:]
+        if ((len(sv.get()) <= 3 and not tgl.isdigit()) or
+            (len(sv.get()) == 4 and not bln.isdigit()) or
+            (len(sv.get()) >= 7 and not thn.isdigit())): 
+            sv.set('')
+
+    def keycheck(self, event):
+        s = event.widget
+        if (len(s.get()) == 2 and event.keysym=="BackSpace" or
+            len(s.get()) == 5 and event.keysym=="BackSpace"):
+            s.delete(len(s.get())-1, tk.END)
+
+        if event.keysym=="BackSpace":
+            return
+        
+        tgl = s.get()[:2]
+        bln = s.get()[3:5]
+        thn = s.get()[6:]
+        # if ((len(s.get()) <= 3 and not tgl.isdigit()) or
+        #     (len(s.get()) == 4 and not bln.isdigit()) or
+        #     (len(s.get()) >= 7 and not thn.isdigit())): 
+        #     s.delete(0, tk.END)
+        if (len(s.get()) == 1 and s.get() > '3' or
+            len(s.get()) == 4 and s.get()[3] > '1'):
+            s.insert(len(s.get())-1, "0")
+            s.insert("end", "-")
+        elif ((len(s.get()) == 2 and tgl < '32') or
+            (len(s.get()) == 5 and bln < '13')):
+            s.insert(len(s.get()), "-")
+        elif (len(s.get()) >= 2 and s.get()[2:3] != "-" or # beri "-" setelah tgl
+            len(s.get()) >= 5 and s.get()[5:6] != "-"): # beri "-" setelah bln
+            self.bell()
+            s.delete(len(s.get())-1, tk.END)
 
 class PopupDateTime(object):
     def __init__(self,master):
@@ -94,6 +148,7 @@ class PopupDateTime(object):
         tikdua.grid(row=0,column=1)
         self.date = CustomDateEntry(topFrame, width=10, locale='en_UK')
         self.date.grid(row=0,column=2,sticky='W')
+        self.date.bind("<KeyRelease>", self.date.keycheck)
         jam=ttk.Label(topFrame,text="Jam")
         jam.grid(row=1,column=0)
         tikdua = ttk.Label(topFrame,text=":")
@@ -123,7 +178,6 @@ class PopupDateTime(object):
                 S != ":") or (len(s) == 3 and int(S) > 5) or len(s) > 4):
             self.alarm()
             return False
-         
         return True
 
     def hour_24(self, event):
@@ -196,10 +250,15 @@ class PopupDateTime(object):
 class TestRun(object):
     def __init__(self,master):
         self.master=master
+        jam=ttk.Label(master)
+        jam.pack()
+        self.runclock = RunClock(master,jam)
         self.setbtn=ttk.Button(master,text="Set Date",command=self.popup)
         self.setbtn.pack()
         self.showbtn=ttk.Button(master,text="Get Date",command=lambda: sys.stdout.write(self.entryValue()+'\n'))
         self.showbtn.pack()
+        self.relogbtn=ttk.Button(master,text="Relog",command=self.relog) # test relog saat Main Program running
+        self.relogbtn.pack()
     def popup(self):
         self.gopopup=PopupDateTime(self.master)
         self.setbtn["state"] = "disabled"
@@ -207,9 +266,17 @@ class TestRun(object):
         self.setbtn["state"] = "normal"
     def entryValue(self):
         return self.gopopup.value
+    def relog(self,event=None):
+        self.runclock.keluar()
+        self.master.destroy()
+        start()
 
+def start():
+    global root
+    root = tk.Tk()
+    TestRun(root)
+    root.mainloop()
 
 if __name__ == "__main__":
-    root=tk.Tk()
-    m=TestRun(root)
-    root.mainloop()
+    # os.system("cls")
+    start()
