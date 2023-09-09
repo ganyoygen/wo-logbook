@@ -27,12 +27,18 @@ class SetConfig(object):
         ttk.Label(topFr,text="User").grid(row=4,column=1,sticky=W)
         ttk.Label(topFr,text="Password").grid(row=5,column=1,sticky=W)
         
-        ttk.Label(topFr,text="MSSQL IFCA Db").grid(row=0,column=4,sticky=W)
-        ttk.Label(topFr,text="-").grid(row=1,column=3,sticky=W)
-        ttk.Label(topFr,text="-").grid(row=2,column=3,sticky=W)
-        ttk.Label(topFr,text="-").grid(row=3,column=3,sticky=W)
-        ttk.Label(topFr,text="-").grid(row=4,column=3,sticky=W)
-        ttk.Label(topFr,text="-").grid(row=5,column=3,sticky=W)
+        self.varcek=IntVar()
+        # self.varcek=StringVar()
+        # self.varcek.set(1)
+        self.btncek = ttk.Checkbutton(topFr,variable=self.varcek,\
+                        text='MSSQL IFCA Db',command=self.check_changed)
+        self.btncek.grid(row=0, column=4)
+        # ttk.Label(topFr,text="MSSQL IFCA Db").grid(row=0,column=4,sticky=W)
+        ttk.Label(topFr,text=" ").grid(row=1,column=3,sticky=W)
+        ttk.Label(topFr,text=" ").grid(row=2,column=3,sticky=W)
+        ttk.Label(topFr,text=" ").grid(row=3,column=3,sticky=W)
+        ttk.Label(topFr,text=" ").grid(row=4,column=3,sticky=W)
+        ttk.Label(topFr,text=" ").grid(row=5,column=3,sticky=W)
 
         self.entHost = LimitEntry(topFr,maxlen=16,width=20)
         self.entHost.grid(row=1, column=2)
@@ -100,6 +106,17 @@ class SetConfig(object):
     def alarm(self, event):
         self.top.bell()
 
+    def check_changed(self):
+        if self.varcek.get() == 0:
+            self.entMSHost.config(state="disable")
+            self.entMSDb.config(state="disable")
+            self.entMSUser.config(state="disable")
+            self.entMSPass.config(state="disable")
+            # self.varcek.set(0)
+        else : 
+            self.entry_set("normal")
+            self.varcek.set(1) # Change status mssql to aktif
+
     def entry_set(self,opsi):
         if opsi == "clear":
             self.entHost.delete(0,END)
@@ -131,6 +148,7 @@ class SetConfig(object):
             self.entMSDb.config(state="disable")
             self.entMSUser.config(state="disable")
             self.entMSPass.config(state="disable")
+            self.btncek.config(state="disable")
         elif opsi == "normal":
             self.entHost.config(state="normal")
             self.entPort.config(state="normal")
@@ -141,6 +159,7 @@ class SetConfig(object):
             self.entMSDb.config(state="normal")
             self.entMSUser.config(state="normal")
             self.entMSPass.config(state="normal")
+            self.btncek.config(state="normal")
         else: pass
 
     def test_conn(self):
@@ -196,6 +215,7 @@ class SetConfig(object):
             "database": "db name",
             "uid": "username",
             "pwd": "password",
+            "cek": "0"
             }
         #Write the above sections to config.ini file
         with open(getfile, 'w') as conf:
@@ -223,6 +243,7 @@ class SetConfig(object):
             self.entMSDb.insert(END,userinfoms["database"])
             self.entMSUser.insert(END,userinfoms["uid"])
             self.entMSPass.insert(END,userinfoms["pwd"])
+            self.varcek.set(int(userinfoms["cek"]))
             self.entry_set("disable")
         else:
             print('{0} not found in the {1} file'.format(secmysql,getfile))
@@ -233,6 +254,7 @@ class SetConfig(object):
         self.btnTest["state"] = "disabled"
         self.btnSave["state"] = "normal"
         self.entry_set("normal")
+        self.check_changed()
 
     def update_file(self,event=None):
         #Read config.ini file
@@ -252,6 +274,7 @@ class SetConfig(object):
         updatems["database"] = self.entMSDb.get()
         updatems["uid"] = self.entMSUser.get()
         updatems["pwd"] = self.entMSPass.get()
+        updatems["cek"] = str(self.varcek.get())
         #Write changes back to file
         with open(getfile, 'w') as conf:
             config_object.write(conf)

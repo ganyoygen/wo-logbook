@@ -22,6 +22,9 @@ def read_db_config_ms(filename=getfile, section='mssql'):
         items = parser.items(section)
         for item in items:
             db[item[0]] = item[1]
+        if db['cek'] != '1': 
+            print('mssql tidak aktif')
+            db = {}
     else:
         raise Exception('{0} not found in the {1} file'.format(section, filename))
     return db
