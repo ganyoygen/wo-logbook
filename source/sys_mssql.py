@@ -22,9 +22,16 @@ def read_db_config_ms(filename=getfile, section='mssql'):
         items = parser.items(section)
         for item in items:
             db[item[0]] = item[1]
-        if db['cek'] != '1': 
-            print('mssql tidak aktif')
-            db = {}
+
+        try:
+            if db['cek'] != '1': 
+                # print('mssql tidak aktif')
+                db = {}
+        except: # jika belum ada dict. cek = 1 maka lakukan:
+            updatems = parser[section]
+            updatems["cek"] = '1'
+            with open(getfile, 'w') as conf:
+                parser.write(conf)
     else:
         raise Exception('{0} not found in the {1} file'.format(section, filename))
     return db

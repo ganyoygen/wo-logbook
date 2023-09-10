@@ -40,7 +40,7 @@ class SetConfig(object):
         ttk.Label(topFr,text=" ").grid(row=4,column=3,sticky=W)
         ttk.Label(topFr,text=" ").grid(row=5,column=3,sticky=W)
 
-        self.entHost = LimitEntry(topFr,maxlen=16,width=20)
+        self.entHost = LimitEntry(topFr,maxlen=30,width=20)
         self.entHost.grid(row=1, column=2)
         self.entPort = LimitEntry(topFr,maxlen=16,width=20)
         self.entPort.grid(row=2, column=2)
@@ -51,7 +51,7 @@ class SetConfig(object):
         self.entPass = LimitEntry(topFr,maxlen=16,show='*',width=20)
         self.entPass.grid(row=5, column=2)
 
-        self.entMSHost = LimitEntry(topFr,maxlen=16,width=20)
+        self.entMSHost = LimitEntry(topFr,maxlen=30,width=20)
         self.entMSHost.grid(row=1, column=4)
         self.entMSDb = LimitEntry(topFr,maxlen=16,width=20)
         self.entMSDb.grid(row=3, column=4)
@@ -285,12 +285,28 @@ class TestRun(object):
         self.master=master
         self.setbtn=ttk.Button(master,text="Config",command=self.popup)
         self.setbtn.pack()
+        ttk.Button(master,text='Cek MSSQL',command=self.stsmssql).pack()
 
     def popup(self):
         self.gopopup=SetConfig(self.master)
         self.setbtn["state"] = "disabled"
         self.master.wait_window(self.gopopup.top)
         self.setbtn["state"] = "normal"
+
+    def stsmssql(self):
+        if checkmssql() == True: print('MSSQL is active')
+        else: print('MSSQL is not active')
+
+def checkmssql():
+    #Read config.ini file
+    config_object = ConfigParser()
+    config_object.read(getfile)
+    try:
+        if config_object.has_section(secmssql):
+            userinfoms = config_object[secmssql]
+            # print(bool(int(userinfoms["cek"])))
+            return bool(int(userinfoms["cek"])) # True or False
+    except: return False
 
 if __name__ == "__main__":
     root=tk.Tk()

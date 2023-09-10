@@ -13,6 +13,7 @@ from sys_date import GetDuration,PopupDateTime,CustomDateEntry,store_date,get_da
 from sys_progbar import SetProgBar
 from sys_pullwo import PullWoTable
 from sys_entry import CusHourEnt, CusDateEnt
+from sys_config import checkmssql
 from ico_images import iconimage
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
@@ -425,13 +426,26 @@ class PageMain(tk.Frame):
     def auto_wo(self):
         lasttn = self.get_last_ifca("TN")
         lastbm = self.get_last_ifca("BM")
-        sql = ("SELECT no_wo FROM logbook where no_ifca LIKE %s")
-        val = (lasttn,)
-        wotn = getdata_one(sql,val)
-        sql = ("SELECT no_wo FROM logbook where no_ifca LIKE %s")
-        val = (lastbm,)
-        wobm = getdata_one(sql,val)
-        maxwo = max(wotn[0],wobm[0])
+
+        def ambil_nowo(ifca):
+            sql = ("SELECT no_wo FROM logbook where no_ifca LIKE %s")
+            val = (ifca,)
+            return getdata_one(sql,val)
+
+        try: 
+            wotn = ambil_nowo(lasttn)[0] # karena class tuple, ambil item pertama [0]
+            while wotn == "": # jika no WO kosong ambil dari lastifca kurangi 1
+                lasttn = 'TN'+str(int(lasttn[2:])-1) # update ifca (lasttn) setelah dikurangi 1
+                wotn = ambil_nowo(lasttn)[0] # update wotn
+
+            wobm = ambil_nowo(lastbm)[0]
+            while wobm == "":  # sama kaya wotn
+                lastbm = 'BM'+str(int(lastbm[2:])-1)
+                wobm = ambil_nowo(lastbm)[0]
+
+            maxwo = max(wotn,wobm)
+        except: maxwo = ""
+
         if maxwo == "": newo = 1 #jika no wo kosong dari TN dan BM, set 1
         else: newo = int(maxwo)+1 #setelah max dari TN dan BM, + 1
         if len(str(newo)) <= 6:
@@ -458,9 +472,13 @@ class PageMain(tk.Frame):
         # print("Get new ifca:",getNewIfca) 
         self.entIfca.delete(0, END)
         self.entIfca.insert(0,getNewIfca)
-        self.getDataIFCAServer()
+        if checkmssql() == True: self.getDataIFCAServer()
 
     def getDataIFCAServer(self,Event=None):
+        if checkmssql() == False: 
+            messagebox.showwarning(title="Remote MSSQL is not active", \
+                message="Tidak dapat informasi dari IFCA karena MSSQL tidak diaktifkan")
+            return
         # sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = 'TN10029737'"
         # sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = " + "'" +str(data) + "'"
         sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = " + "'" +str(self.entIfca.get()) + "'"
@@ -494,7 +512,11 @@ class PageMain(tk.Frame):
                 message="Synchronization of work requests from IFCA to WOM is reserved for Administrator")
             # self.btnSyncIfca.grid_forget()
             return
-        Thread(target=self.proses_syncIfca).start()
+        elif checkmssql() == False: 
+            messagebox.showwarning(title="Remote MSSQL is not active", \
+                message="Tidak dapat informasi dari IFCA karena MSSQL tidak diaktifkan")
+            return
+        else: Thread(target=self.proses_syncIfca).start()
 
     def proses_syncIfca(self):
         # section processing
@@ -504,7 +526,6 @@ class PageMain(tk.Frame):
             progbar = SetProgBar(self.parent,len(results))
             update=0
             for dat in results:
-                progbar.bytes += 1
                 value = self.tabelIfca.item(dat)['values']
                 value.insert(0,update) # tambah nomor colom pertama
                 sql = "SELECT * FROM [property_live].[mgr].[sv_entry_hd] where report_no = " + "'" +value[2] + "'"
@@ -519,6 +540,7 @@ class PageMain(tk.Frame):
                         messagebox.showerror(title="Sync File Error", \
                             message="Fail on Update {}".format(value[2]))
                 else: print("Warning: Tidak ditemukan database IFCA untuk",value[2])
+                progbar.bytes += 1
             finish = time.perf_counter()
             usedsecs = finish-start
             if usedsecs > 60: usedsecs = GetDuration(usedsecs).value
