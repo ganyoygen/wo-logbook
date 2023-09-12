@@ -1,4 +1,30 @@
 Changelog
+WOM v4.0-230912
+---------------------------------------
+1. [BUTTON] Icon Button Repack
+ - Modifikasi tombol dengan icon
+ * 928523bc51392b090dc9935a309e9f30b202bd79
+2. [SYSTEM] Date Clock
+ - Penambahan tanggal dan jam pada header
+ - Modifikasi Entry Tanggal dan Jam
+ * 928523bc51392b090dc9935a309e9f30b202bd79
+3. [PAGEMAIN] Auto IFCA
+ - Perbaikan Auto IFCA pada MSSQL Remote
+ * 928523bc51392b090dc9935a309e9f30b202bd79
+4. [PAGEMAIN] Sync IFCA
+ - Sinkronisasi WOM terhadap IFCA pada Unit, Tanggal, Work Request berdasarkan tabel
+ * 928523bc51392b090dc9935a309e9f30b202bd79
+5. [PAGEMAIN] Recoding Auto WO
+ - Perbaikan code Auto WO, perbaikan bug saat wo terakhir
+ * 629622024b01c2ab5e055cf4bedd2c70acb6ef70
+6. [SYSTEM] Optional MSSQL
+ - MSSQL dapat digabungkan menjadi Auto IFCA juga dapat dinonaktifkan
+ * 1481cab6d84e6b7179be9cbe035b5a28baadcf8b
+7. [PAGEUSER] Class ROOT
+ - Generate Reset Password pada account dapat dilakukan
+ * 1481cab6d84e6b7179be9cbe035b5a28baadcf8b
+=======================================
+Changelog
 WOM v3.0-220905
 ---------------------------------------
 1. [PAGEMAIN] Bug import 

@@ -27,9 +27,6 @@ class UserMgmt(tk.Frame):
             self.komponenAtas()
             self.komponenTengah()
             self.komponenBawah()
-        else: 
-            messagebox.showerror(title="Error", \
-                message="User Management hanya untuk class ROOT")
         
     def komponenUtama(self):
         self.topFrame = ttk.Frame(self)

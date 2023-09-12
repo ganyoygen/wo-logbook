@@ -1,5 +1,4 @@
 import os
-import tkinter
 from tkinter import *
 from tkinter import ttk,messagebox
 from ttkthemes import ThemedTk # make sure to pip install ttkthemes
@@ -13,7 +12,7 @@ from sys_mysql import insert_data,getdata_one
 from sys_date import RunClock
 from ico_images import iconimage
 
-VERSION = "4.0-2309RC"
+VERSION = "4.0-230912"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -69,7 +68,7 @@ class MainLog:
         self.runclock = RunClock(frameWin,LabelJam)  # tampilkan jam aktual di label 
         # Button(frameWin, text="LOGOUT",command=self.relog,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
         Button(frameWin, text="LOGOUT",image=self.icon.iclogout,command=self.relog,compound=LEFT,relief=RAISED,bg="#898",fg="white").pack(side=RIGHT,padx=20)
-        Label(footer, text=("Work Order Manager Version: {0}".format(VERSION))).pack(side=LEFT,padx=10)
+        Label(footer, text=("Work Order Manager version: {0}".format(VERSION))).pack(side=LEFT,padx=10)
         Label(footer, text=("Copyright © 2020-2023 WOM, prasetya.angga.pares@gmail.com")).pack(side=RIGHT,padx=10)
         '''
         # Menghilangkan Frame windows
