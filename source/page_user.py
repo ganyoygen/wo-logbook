@@ -1,14 +1,14 @@
 import tkinter as tk
-import mysql.connector
 import time
 import datetime
 from tkinter import *
 from tkinter import ttk, messagebox
 from datetime import datetime
 # from sys_mysql import *
-from sys_mysql import read_db_config,getdata_all,getdata_one,insert_data
-from sys_date import PopupDateTime,GetSeconds 
+from sys_mysql import getdata_all,getdata_one,insert_data
+from sys_date import GetSeconds 
 from sys_account import RemoveAcct
+from sys_pwhash import generate_hash,get_random_string
 
 
 kolomUser = ("UID","Username","Class","Date Created","Activated","Locked",\
@@ -20,12 +20,16 @@ class UserMgmt(tk.Frame):
         self.parent = parent
         self.user = user
         self.dept = dept
+        self.genlistpw = {}
 
         if dept == "ROOT":
             self.komponenUtama()
             self.komponenAtas()
             self.komponenTengah()
             self.komponenBawah()
+        else: 
+            messagebox.showerror(title="Error", \
+                message="User Management hanya untuk class ROOT")
         
     def komponenUtama(self):
         self.topFrame = ttk.Frame(self)
@@ -64,7 +68,7 @@ class UserMgmt(tk.Frame):
 
         ttk.Label(self.topFrame, text='Email').grid(row=3,column=1,sticky=W,padx=10,pady=5)
         ttk.Label(self.topFrame, text=':').grid(row=3,column=2,sticky=W,padx=10,pady=5)
-        self.entEmail = ttk.Entry(self.topFrame,width=20)
+        self.entEmail = ttk.Entry(self.topFrame,width=30)
         self.entEmail.grid(row=3,column=3,sticky=W)
 
         ttk.Label(self.topFrame, text='Status').grid(row=4,column=1,sticky=W,padx=10,pady=5)
@@ -88,6 +92,10 @@ class UserMgmt(tk.Frame):
 
         ttk.Label(self.topFrame, text='Reset Password').grid(row=6,column=1,sticky=W,padx=10,pady=5)
         ttk.Label(self.topFrame, text=':').grid(row=6,column=2,sticky=W,padx=10,pady=5)
+        colEntPw = ttk.Frame(self.topFrame)
+        colEntPw.grid(row=6,column=3,sticky=W)
+        self.btnGenerPw = ttk.Button(colEntPw,text="Generate",command=self.generatePw)
+        self.entPw = ttk.Entry(colEntPw,width=18)
         
     def komponenTengah(self):
         pass
@@ -128,10 +136,16 @@ class UserMgmt(tk.Frame):
             self.entLastLog.delete(0,END)
             self.entLastPC.delete(0,END)
             self.entLastIP.delete(0,END)
+            
+            self.entPw.config(state="normal")
+            self.entPw.delete(0,END)
+            self.entPw.grid_forget()
 
             self.entDept.current(0)
             self.selboxdept(None)
             self.btnLock.grid_forget()
+            self.btnGenerPw.grid_forget()
+            
         elif opsi == "read":
             self.entUid.config(state="readonly")
             self.entName.config(state="readonly")
@@ -140,6 +154,7 @@ class UserMgmt(tk.Frame):
             self.entLastLog.config(state="readonly")
             self.entLastPC.config(state="readonly")
             self.entLastIP.config(state="readonly")
+            self.entPw.config(state="readonly")
         else: pass
 
     def user_detail(self,event=None):
@@ -170,7 +185,42 @@ class UserMgmt(tk.Frame):
         self.entLastLog.insert(END,curItem['values'][7])
         self.entLastPC.insert(END,curItem['values'][8])
         self.entLastIP.insert(END,curItem['values'][9])
+        generpwcek = self.genlistpw.get(self.entUid.get()) #cek apakah uid sudah digenerate
+        if generpwcek == None: #jika belum generate, tampilkan tombol
+            self.btnGenerPw.grid(row=1,column=1,sticky=W)
+        else:  #jika sudah generate, tampilkan pw baru
+            self.entPw.grid(row=1,column=2,sticky=W)
+            self.entPw.insert(END,generpwcek)
         self.entryset("read")
+
+    def generatePw(self):
+        def dochangepw():
+            uid = data[0]
+            self.entPw.grid(row=1,column=2,sticky=W)
+            self.entPw.config(state="normal")
+            self.entPw.delete(0,END)
+            self.entPw.insert(END,get_random_string(8)) # 8 Char
+            self.btnGenerPw.grid_forget()
+            self.entryset("read")
+            self.genlistpw.update({str(uid):self.entPw.get()})
+            storepw = generate_hash(self.entPw.get())
+            sql = "UPDATE acct SET passhash=%s WHERE uid=%s"
+            val = (storepw,uid)
+            if (insert_data(sql,val)) == True:
+                return True
+            return False
+
+        if messagebox.askokcancel('Change Password','Anda yakin akan mengganti Password?') == True:
+            sql = "SELECT * FROM acct WHERE uid = %s"
+            val = (self.entUid.get(),)
+            data = getdata_one(sql,val)
+            if data != None :
+                if dochangepw() == True:
+                    messagebox.showinfo(title="Change Password", \
+                        message="Password baru sudah berhasil diupdate.")
+                else: print("Password gagal diupdate. UID tidak ditemukan")
+            else: messagebox.showerror(title="Change Password", \
+                    message="Password gagal diupdate. UID tidak ditemukan")
 
     def refresh(self):
         self.entryset("clear")
@@ -248,3 +298,18 @@ class UserMgmt(tk.Frame):
                     message="Lock success.")
         else: pass
         self.refresh()
+
+def testrun(user,dept):
+    notebook = ttk.Notebook(root) # lihat, self.parent = root
+    notebook.pack(fill="both", expand=True)
+    notebook.add(UserMgmt(notebook,user,dept), text="User Mgmt")
+    root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
+    # root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.mainloop()
+
+if __name__ == "__main__":
+    from ttkthemes import ThemedTk
+    root = ThemedTk(theme='clearlooks')
+    user = 'Debug'
+    dept = 'ROOT'
+    testrun(user,dept)

@@ -223,6 +223,8 @@ class SetConfig(object):
         self.read_file()
 
     def read_file(self):
+        if checkmssql() == False or checkmssql() == None: print('MSSQL is not active')
+        else: print('MSSQL is active')
         self.btnEdit["state"] = "normal"
         self.btnTest["state"] = "normal"
         self.btnSave["state"] = "disabled"
@@ -285,17 +287,12 @@ class TestRun(object):
         self.master=master
         self.setbtn=ttk.Button(master,text="Config",command=self.popup)
         self.setbtn.pack()
-        ttk.Button(master,text='Cek MSSQL',command=self.stsmssql).pack()
 
     def popup(self):
         self.gopopup=SetConfig(self.master)
         self.setbtn["state"] = "disabled"
         self.master.wait_window(self.gopopup.top)
         self.setbtn["state"] = "normal"
-
-    def stsmssql(self):
-        if checkmssql() == True: print('MSSQL is active')
-        else: print('MSSQL is not active')
 
 def checkmssql():
     #Read config.ini file
@@ -306,7 +303,11 @@ def checkmssql():
             userinfoms = config_object[secmssql]
             # print(bool(int(userinfoms["cek"])))
             return bool(int(userinfoms["cek"])) # True or False
-    except: return False
+    except: # jika belum ada dict. cek = 1 maka lakukan:
+        updatems = config_object[secmssql]
+        updatems["cek"] = '1'
+        with open(getfile, 'w') as conf: config_object.write(conf)
+        return True
 
 if __name__ == "__main__":
     root=tk.Tk()

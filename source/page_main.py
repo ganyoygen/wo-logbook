@@ -475,7 +475,7 @@ class PageMain(tk.Frame):
         if checkmssql() == True: self.getDataIFCAServer()
 
     def getDataIFCAServer(self,Event=None):
-        if checkmssql() == False: 
+        if checkmssql() == False or checkmssql() == None:
             messagebox.showwarning(title="Remote MSSQL is not active", \
                 message="Tidak dapat informasi dari IFCA karena MSSQL tidak diaktifkan")
             return
@@ -512,7 +512,7 @@ class PageMain(tk.Frame):
                 message="Synchronization of work requests from IFCA to WOM is reserved for Administrator")
             # self.btnSyncIfca.grid_forget()
             return
-        elif checkmssql() == False: 
+        elif checkmssql() == False or checkmssql() == None:
             messagebox.showwarning(title="Remote MSSQL is not active", \
                 message="Tidak dapat informasi dari IFCA karena MSSQL tidak diaktifkan")
             return
@@ -606,7 +606,7 @@ class PageMain(tk.Frame):
             next(reader) # skip the heading
             lines = len(list(reader)) # jumlah baris dalam file setelah header
             # lines = sum(1 for row in reader) # ini juga bisa hitung jumlah baris
-            if lines > 5000:
+            if lines > 10000:
                 messagebox.showerror(title="Import File Error", \
                     message="Row count: {}. Maximum is 5000".format(lines))
                 return
@@ -985,5 +985,5 @@ if __name__ == "__main__":
     from ttkthemes import ThemedTk
     root = ThemedTk(theme='clearlooks')
     user = 'Debug'
-    dept = 'ROOT'
+    dept = 'ENG'
     testrun(user,dept)

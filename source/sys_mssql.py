@@ -23,15 +23,9 @@ def read_db_config_ms(filename=getfile, section='mssql'):
         for item in items:
             db[item[0]] = item[1]
 
-        try:
-            if db['cek'] != '1': 
-                # print('mssql tidak aktif')
-                db = {}
-        except: # jika belum ada dict. cek = 1 maka lakukan:
-            updatems = parser[section]
-            updatems["cek"] = '1'
-            with open(getfile, 'w') as conf:
-                parser.write(conf)
+        if db['cek'] != '1': 
+            # print('mssql tidak aktif')
+            db = {}
     else:
         raise Exception('{0} not found in the {1} file'.format(section, filename))
     return db
@@ -42,9 +36,9 @@ def mssql_all(query,param):
         cur = con.cursor()
         cur.execute(query, param)
         results = cur.fetchall()
-        return results
         cur.close()
         con.close()
+        return results
     except pypyodbc.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
@@ -55,9 +49,9 @@ def mssql_one(query):
         cur = con.cursor()
         cur.execute(query)
         results = cur.fetchone()
-        return results
         cur.close()
         con.close()
+        return results
     except pypyodbc.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
@@ -67,10 +61,10 @@ def insert_mssql(query,param):
         con = pypyodbc.connect(**read_db_config_ms())
         cur = con.cursor()
         cur.execute(query, param)
-        return True
         con.commit()
         cur.close()
         con.close()
+        return True
     except pypyodbc.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))

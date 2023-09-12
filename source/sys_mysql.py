@@ -31,9 +31,9 @@ def getdata_all(query,param):
         cur = con.cursor()
         cur.execute(query, param)
         results = cur.fetchall()
-        return results
         cur.close()
         con.close()
+        return results
     except mysql.connector.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
@@ -44,9 +44,9 @@ def getdata_one(query,param):
         cur = con.cursor()
         cur.execute(query, param)
         results = cur.fetchone()
-        return results
         cur.close()
         con.close()
+        return results
     except mysql.connector.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
@@ -56,10 +56,10 @@ def insert_data(query,param):
         con = mysql.connector.connect(**read_db_config())
         cur = con.cursor()
         cur.execute(query, param)
-        return True
         con.commit()
         cur.close()
         con.close()
+        return True
     except mysql.connector.Error as err:
         messagebox.showerror(title="Error", \
             message="SQL Log: {}".format(err))
