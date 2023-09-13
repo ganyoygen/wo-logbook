@@ -7,10 +7,10 @@ import datetime
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
-from sys_mysql import read_db_config,getdata_one,getdata_all
+from sys_mysql import read_db_config,getdata_one,getdata_all,insert_data
 from sys_date import PopupDateTime,get_date
 
-kolomProgIfca = ("WO","IFCA","UNIT")
+kolomProgIfca = ("#","WO","IFCA","UNIT")
 kolomCommIfca = ("TANGGAL","UPDATE","OLEH","DEPT")
 
 class PageProg(tk.Frame):
@@ -44,61 +44,63 @@ class PageProg(tk.Frame):
     def komponenAtas(self):
         entOne = ttk.Frame(self.topFrame)
         entOne.grid(row=1,column=1,sticky=W)
-        self.progWo = ttk.Entry(entOne, width=10)
-        self.progWo.grid(row=1, column=0,sticky=W)
-        self.progIfca = ttk.Entry(entOne, width=15)
-        self.progIfca.grid(row=1, column=1,sticky=W)               
-        ttk.Label(entOne, text=' ').grid(row=1, column=2, sticky=W,pady=5,padx=10)
-        self.progUnit = ttk.Entry(entOne, width=12)
-        self.progUnit.grid(row=1, column=3,sticky=W)
+        ttk.Label(entOne,text='WO:').grid(row=1,column=0,sticky=W)
+        self.progWo = ttk.Entry(entOne,width=10)
+        self.progWo.grid(row=1,column=1,padx=2,sticky=W)
+        ttk.Label(entOne,text='Unit:').grid(row=2,column=0,sticky=W)
+        self.progUnit = ttk.Entry(entOne,width=10)
+        self.progUnit.grid(row=2,column=1,padx=2,sticky=W)
+        ttk.Label(entOne,text='   ').grid(row=1,column=2,sticky=W,padx=5)
+        ttk.Label(entOne,text='IFCA:').grid(row=1,column=3,sticky=E)
+        self.progIfca = ttk.Entry(entOne,width=16)
+        self.progIfca.grid(row=1,column=4,padx=2,sticky=W)
+        ttk.Label(entOne,text='Date Create:').grid(row=2,column=3,sticky=W)
+        self.progTgl = ttk.Entry(entOne,width=16)
+        self.progTgl.grid(row=2,column=4,padx=2)
 
         entTwo = ttk.Frame(self.topFrame)
-        entTwo.grid(row=2,column=1,sticky=W)
-        self.progTgl = ttk.Entry(entTwo, width=15)
-        self.progTgl.grid(row=1, column=0,sticky=W)
-        self.progJam = ttk.Entry(entTwo, width=10)
-        self.progJam.grid(row=1, column=1,sticky=W)               
-        ttk.Label(entTwo, text=' ').grid(row=1, column=2, sticky=W,pady=5,padx=10)
-        self.progStaff = ttk.Entry(entTwo, width=12)
-        self.progStaff.grid(row=1, column=3,sticky=W)
-
-        self.progWorkReq = ScrolledText(self.topFrame,height=8,width=40)
-        self.progWorkReq.grid(row=3, column=1,sticky=W)
+        entTwo.grid(row=2,column=1,sticky=W) 
+        ttk.Label(entTwo,text='Staff:').grid(row=1,column=0,sticky=W)
+        self.progStaff = ttk.Entry(entTwo,width=16)
+        self.progStaff.grid(row=1,column=1,padx=2)
+        ttk.Label(entTwo,text='Work Request:').grid(row=1,column=2,sticky=W,padx=5)
         
-        ttk.Label(self.topFrame, text='     ').grid(row=3,column=2,sticky=W,pady=5,padx=10)
+        self.progWorkReq = ScrolledText(self.topFrame,height=8,width=40)
+        self.progWorkReq.grid(row=4, column=1,sticky=W)
+        
+        ttk.Label(self.topFrame, text='     ').grid(row=4,column=2,padx=10)
         self.commitDetail = ScrolledText(self.topFrame,height=8,width=50)
-        self.commitDetail.grid(row=3, column=3,sticky=W)
+        self.commitDetail.grid(row=4, column=3,sticky=W)
 
-        entLeft = ttk.Frame(self.topFrame)
-        entLeft.grid(row=2,column=3,sticky=W)
-        self.commitdate = ttk.Entry(entLeft, width=20)
-        self.commitdate.grid(row=1, column=0,sticky=W)
-        ttk.Label(entLeft, text='By :').grid(row=1, column=1, sticky=W,pady=5,padx=5)
-        self.commitby = ttk.Entry(entLeft, width=20)
-        self.commitby.grid(row=1, column=2,sticky=W)
+        ttk.Label(self.topFrame,text='Update Detail:').grid(row=1,column=3,sticky=SW)
 
-        self.btnPendAccp = ttk.Button(entLeft,text='Accept',command=self.onAccPending,width=10)
-        self.btnPendAccp.grid(row=1,column=3,sticky=N,pady=10,padx=5)
+        entRight = ttk.Frame(self.topFrame)
+        entRight.grid(row=2,column=3,sticky=W)
+        ttk.Label(entRight, text='Date:').grid(row=2, column=0, sticky=E)
+        self.commitdate = ttk.Entry(entRight, width=18)
+        self.commitdate.grid(row=2, column=1,sticky=W)
+        ttk.Label(entRight,text='   ').grid(row=2,column=2,padx=5)
+        ttk.Label(entRight, text='By:').grid(row=2, column=3, sticky=W)
+        self.commitby = ttk.Entry(entRight, width=20)
+        self.commitby.grid(row=2, column=4,sticky=W)
+        self.btnPendAccp = ttk.Button(entRight,text='Accept',command=self.onAccPending,width=10)
+        self.btnPendAccp.grid(row=2,column=5,padx=5)
         
         entBtnRight = ttk.Frame(self.topFrame)
-        entBtnRight.grid(row=3,column=4,sticky=W)
+        entBtnRight.grid(row=4,column=4,sticky=W)
         
         self.btnCommUpdate = ttk.Button(entBtnRight,text='Update',command=self.onProgCommUpd,width=10)
-        self.btnCommUpdate.grid(row=1,column=0,sticky=N,pady=5,padx=5)
+        self.btnCommUpdate.grid(row=1,column=0,sticky=N,pady=2,padx=5)
         self.btnCommReturn = ttk.Button(entBtnRight,text='Return',command=self.onReturnWO,width=10)
         self.btnCommReturn.bind("<Button-3>",self.onReturnWO) # percobaan tooltips
-        self.btnCommReturn.grid(row=2,column=0,sticky=N,pady=5,padx=5)
+        self.btnCommReturn.grid(row=2,column=0,sticky=N,pady=2,padx=5)
         self.btnCommTake = ttk.Button(entBtnRight,text='Take',command=self.onTakeWO,width=10)
         self.btnCommTake.bind("<Button-3>",self.onTakeWO) # percobaan tooltips
-        self.btnCommTake.grid(row=3,column=0,sticky=N,pady=5,padx=5)
+        self.btnCommTake.grid(row=3,column=0,sticky=N,pady=2,padx=5)
         self.btnCommDone = ttk.Button(entBtnRight,text='Done',command=self.onSetDoneWO,width=10)
-        # self.btnCommDone = Button(entBtnRight, text='Done',\
-        #     command=self.onSetDoneWO, width=10,\
-        #     relief=RAISED, bd=2, bg="#FC6042", fg="white",#
-        #     activebackground="#444",activeforeground="white" )
         self.btnCommDone.bind("<Button-3>",self.onSetDoneWO) # percobaan tooltips
-        self.btnCommDone.grid(row=4,column=0,sticky=N,pady=5,padx=5)
-        
+        self.btnCommDone.grid(row=4,column=0,sticky=N,pady=2,padx=5)
+
     def komponenTengah(self):
         btnselect = ttk.Frame(self.midFrame)
         btnselect.grid(row=1,column=1,sticky=W)
@@ -139,6 +141,12 @@ class PageProg(tk.Frame):
         self.tabelProg.pack(side=TOP, fill=BOTH)
         self.tabelProg.configure(yscrollcommand=sbVer.set)
         self.tabelProg.configure(xscrollcommand=sbHor.set)
+        for kolom in kolomProgIfca:
+            self.tabelProg.heading(kolom,text=kolom)
+        self.tabelProg.column("#", width=35,anchor="w")
+        self.tabelProg.column("WO", width=50,anchor="e")
+        self.tabelProg.column("IFCA", width=80,anchor="w")
+        self.tabelProg.column("UNIT", width=80,anchor="w")
 
         self.tabelcomm = ttk.Treeview(listcomm, columns=kolomCommIfca,show='headings')
         self.tabelcomm.bind("<Double-1>",self.prog_comm_detail)
@@ -149,6 +157,13 @@ class PageProg(tk.Frame):
         self.tabelcomm.pack(side=TOP, fill=BOTH)
         self.tabelcomm.configure(yscrollcommand=sbVer.set)
         self.tabelcomm.configure(xscrollcommand=sbHor.set)
+        for kolom in kolomCommIfca:
+            self.tabelcomm.heading(kolom,text=kolom)
+        # self.tabelcomm.column("No", width=10,anchor="w")
+        self.tabelcomm.column("TANGGAL", width=110,anchor="w")
+        self.tabelcomm.column("UPDATE", width=400,anchor="w")
+        self.tabelcomm.column("OLEH", width=120,anchor="w")
+        self.tabelcomm.column("DEPT", width=70,anchor="w")
         
         self.progress_refresh()
     
@@ -159,7 +174,6 @@ class PageProg(tk.Frame):
             self.progIfca.config(state="normal")
             self.progUnit.config(state="normal")
             self.progTgl.config(state="normal")
-            self.progJam.config(state="normal")
             self.progStaff.config(state="normal")
             self.progWorkReq.config(state="normal")
             self.commitdate.config(state="normal")
@@ -169,7 +183,6 @@ class PageProg(tk.Frame):
             self.progIfca.delete(0, END)
             self.progUnit.delete(0, END)
             self.progTgl.delete(0, END)
-            self.progJam.delete(0, END)
             self.progStaff.delete(0, END)
             self.commitdate.delete(0, END)
             self.commitby.delete(0, END)
@@ -180,7 +193,6 @@ class PageProg(tk.Frame):
             self.progIfca.config(state="readonly")
             self.progUnit.config(state="readonly")
             self.progTgl.config(state="readonly")
-            self.progJam.config(state="readonly")
             self.progStaff.config(state="readonly")
             self.progWorkReq.config(state="disable")
             # self.commitDetail.config(state="disable")
@@ -202,24 +214,20 @@ class PageProg(tk.Frame):
         sql = "SELECT no_wo, no_ifca, unit FROM logbook WHERE status_ifca LIKE %s ORDER BY no_ifca DESC"
         val = ("%{}%".format(opsi),)
         results = getdata_all(sql, val)
+
         self.tabelProg.delete(*self.tabelProg.get_children()) #refresh, hapus dulu tabel lama
-        for kolom in kolomProgIfca:
-            self.tabelProg.heading(kolom,text=kolom)
-        # self.tabelProg.column("No", width=10,anchor="w")
-        self.tabelProg.column("WO", width=50,anchor="w")
-        self.tabelProg.column("IFCA", width=80,anchor="w")
-        self.tabelProg.column("UNIT", width=80,anchor="w")
-        
+
         i=0
         for dat in results: 
             if(i%2):
                 baris="genap"
             else:
                 baris="ganjil"
-            #tampilkan hanya wo ifca unit 
-            # self.tabelProg.insert('', 'end', values=dat[1]+" "+dat[2]+" "+dat[4], tags=baris)
-            self.tabelProg.insert('', 'end', values=dat, tags=baris)
             i+=1
+            # tambah dan tampilkan nomor sebelum wo 
+            item = (str(i),dat[0],dat[1],dat[2])
+            self.tabelProg.insert('', 'end', values=item, tags=baris)
+            # self.tabelProg.insert('', 'end', values=dat, tags=baris)
         self.tabelProg.tag_configure("ganjil", background="gainsboro")
         self.tabelProg.tag_configure("genap", background="floral white")                       
 
@@ -231,13 +239,6 @@ class PageProg(tk.Frame):
         val = ("%{}%".format(data),)
         results = getdata_all(sql, val)
         self.tabelcomm.delete(*self.tabelcomm.get_children()) #refresh, hapus dulu tabel lama
-        for kolom in kolomCommIfca:
-            self.tabelcomm.heading(kolom,text=kolom)
-        # self.tabelcomm.column("No", width=10,anchor="w")
-        self.tabelcomm.column("TANGGAL", width=110,anchor="w")
-        self.tabelcomm.column("UPDATE", width=500,anchor="w")
-        self.tabelcomm.column("OLEH", width=120,anchor="w")
-        self.tabelcomm.column("DEPT", width=70,anchor="w")
         
         i=0
         for dat in results: 
@@ -253,7 +254,7 @@ class PageProg(tk.Frame):
     def progress_detail(self, event):
         try:
             curItem = self.tabelProg.item(self.tabelProg.focus())
-            ifca_value = curItem['values'][1]
+            ifca_value = curItem['values'][2]
             self.entrySet("progclear")
             self.commited_table(ifca_value)
             self.progIfca.insert(END, ifca_value)
@@ -264,8 +265,7 @@ class PageProg(tk.Frame):
             data = getdata_one(sql,val)
             self.progWo.insert(END, data[0])
             #TGL buat
-            self.progTgl.insert(END,get_date(str(data[2])))
-            self.progJam.insert(END, data[3])
+            self.progTgl.insert(END,get_date(str(data[2]))+' '+data[3])
             self.progUnit.insert(END, data[4])
             self.progWorkReq.insert(END, data[5])
             self.progStaff.insert(END, data[6])
@@ -273,7 +273,7 @@ class PageProg(tk.Frame):
             self.commitdate.config(state="disable")
             if (self.dept == "ENG") or (self.dept == "CS"):
                 if data[7] == "PENDING": 
-                    self.btnCommUpdate.config(state="disable")
+                    self.btnCommUpdate.config(state="normal")
                     self.btnPendAccp.config(state="normal")
                 elif data[7] == "ONPROGRESS": 
                     self.btnCommUpdate.config(state="normal")
@@ -342,41 +342,32 @@ class PageProg(tk.Frame):
         self.tabelcomm.delete(*self.tabelcomm.get_children()) #refresh, hapus dulu tabel lama
         for kolom in kolomCommIfca:
             self.tabelcomm.heading(kolom,text=kolom)
-        #########
-### baru sampe sini [PAGEPROG]Optimization
+
     def onProgCommUpd(self):
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            getIfca = self.progIfca.get()
-            getUsrUpd = self.commitby.get()
-            getcommit = self.commitDetail.get(1.0,END) # ('1.0', 'end')
-            accandusr = getUsrUpd.upper().strip()+"@"+self.user
-            from datetime import datetime
-            getTime = datetime.now()
-            
-            if len(getUsrUpd.strip()) == 0: # .strip memastikan space/tab termasuk len 0
-                messagebox.showwarning(title="Peringatan",message="Siapa yang update commit?")
-                self.commitby.focus_set()
-                self.commitby.delete(0, END)
-            elif len(getcommit.strip()) == 0: # .strip memastikan space/tab termasuk len 0
-                messagebox.showwarning(title="Peringatan",message="Silahkan isi perubahan terlebih dahulu")
-                self.commitDetail.focus_set()
-                self.commitDetail.delete('1.0','end')
-            else:
-                sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login,auth_dept)"+\
-                "VALUES(%s,%s,%s,%s,%s,%s)"
-                cur.execute(sql,(getIfca,getTime,getcommit.strip(),accandusr,self.user,self.dept))
+        getIfca = self.progIfca.get()
+        getUsrUpd = self.commitby.get()
+        getcommit = self.commitDetail.get('1.0', 'end').upper().strip()
+        accandusr = getUsrUpd.upper().strip()+"@"+self.user
+        from datetime import datetime
+        getTime = datetime.now()
+        
+        if len(getUsrUpd.strip()) == 0: # .strip memastikan space/tab termasuk len 0
+            messagebox.showwarning(title="Peringatan",message="Siapa yang update commit?")
+            self.commitby.focus_set()
+            self.commitby.delete(0, END)
+        elif len(getcommit.strip()) == 0: # .strip memastikan space/tab termasuk len 0
+            messagebox.showwarning(title="Peringatan",message="Silahkan isi perubahan terlebih dahulu")
+            self.commitDetail.focus_set()
+            self.commitDetail.delete('1.0','end')
+        else:
+            sql = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login,auth_dept)"+\
+            "VALUES(%s,%s,%s,%s,%s,%s)"
+            val = (getIfca,getTime,getcommit,accandusr,self.user,self.dept)
+            if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Informasi",message="Update telah tersimpan oleh {}.".format(getUsrUpd))
                 self.progress_detail(self)
-            con.commit()
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
-
+        #########
+### baru sampe sini [PAGEPROG]Optimization
     def onAccPending(self):
         try:
             db_config = read_db_config()
@@ -589,4 +580,4 @@ def testrun(user,dept):
 if __name__ == "__main__":
     from ttkthemes import ThemedTk
     root = ThemedTk(theme='scidblue')
-    testrun("UkikLodom","ENG")
+    testrun("Udin","CS")
