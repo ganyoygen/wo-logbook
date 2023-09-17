@@ -41,7 +41,7 @@ class MainLog:
         self.dept = ""
         self.icon = iconimage(self.parent)
         self.parent.protocol("WM_DELETE_WINDOW", self.keluar)
-        lebar=1100
+        lebar=1050
         tinggi=680
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
         setTengahY = (self.parent.winfo_screenheight()-tinggi)//2

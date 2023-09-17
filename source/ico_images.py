@@ -36,3 +36,12 @@ class iconimage(object):
         self.icorcv = icorcv.subsample(2, 2)
         icopull = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"collect.png"))
         self.icopull = icopull.subsample(2, 2)
+
+        icoschd = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"schedule.png"))
+        self.icoschd = icoschd.subsample(2, 2)
+        icofind = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"find.png"))
+        self.icofind = icofind.subsample(2, 2)
+        icotake = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"take.png"))
+        self.icotake = icotake.subsample(2, 2)
+        icodone = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"done.png"))
+        self.icodone = icodone.subsample(2, 2)

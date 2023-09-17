@@ -773,8 +773,8 @@ class PageMain(tk.Frame):
                 self.btnReceived.config(state="normal")
             elif data[14] == "PENDING":
                 self.opsiStatus.current(3)
-            elif data[14] == "ONPROGRESS" or data[14] == "RETURNED" or data[14] == "TAKEN":
-                self.opsiStatus.current(0)
+            # elif data[14] == "ONPROGRESS" or data[14] == "RETURNED" or data[14] == "TAKEN":
+            #     self.opsiStatus.current(0)
             else:
                 if self.dept == "ENG": # khusus class ENG
                     self.btnUpdate.config(state="normal")
@@ -983,7 +983,8 @@ def testrun(user,dept):
 if __name__ == "__main__":
     # PASTIKAN ceksesi dalam mode DEBUG
     from ttkthemes import ThemedTk
+    from sys_usrdebug import PopupUser
     root = ThemedTk(theme='clearlooks')
-    user = 'Debug'
-    dept = 'ENG'
-    testrun(user,dept)
+    setuser = PopupUser(root)
+    setuser.parent.wait_window(setuser.top)
+    testrun(setuser.user,setuser.dept)

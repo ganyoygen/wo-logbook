@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS `logbook` (
   `time_create` varchar(10) NOT NULL,
   `status_ifca` varchar(10) NOT NULL,
   `auth_login` varchar(16) NOT NULL,
+  `stsprog_ifca` varchar(10) NOT NULL,
+  `sched_prog` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
