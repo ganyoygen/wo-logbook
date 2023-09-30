@@ -1,4 +1,17 @@
 Changelog
+WOM v4.1-231001
+---------------------------------------
+1. [SYSTEM] Auto Update Program
+ - WOM dilengkap patcher, versi terbaru yang tersedia di Server
+   akan AutoUpdate Program antara remote dan lokal
+ *
+2. [PAGEPROG] Halaman Progress
+ - Rebuild Total Page Progress untuk memaksimalkan history status WO Progress
+ * ae29d87cc85602d621ea59115096cf3620f3680b
+3. [USERDEBUG] Untuk Debugging Developer
+ * ae29d87cc85602d621ea59115096cf3620f3680b
+=======================================
+
 WOM v4.0-230912
 ---------------------------------------
 1. [BUTTON] Icon Button Repack
@@ -24,7 +37,7 @@ WOM v4.0-230912
  - Generate Reset Password pada account dapat dilakukan
  * 1481cab6d84e6b7179be9cbe035b5a28baadcf8b
 =======================================
-Changelog
+
 WOM v3.0-220905
 ---------------------------------------
 1. [PAGEMAIN] Bug import 

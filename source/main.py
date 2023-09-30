@@ -10,9 +10,10 @@ from page_about import About
 from login import Login
 from sys_mysql import insert_data,getdata_one
 from sys_date import RunClock
+from _checkver import checkversion
 from ico_images import iconimage
 
-VERSION = "4.0-230912"
+VERSION = "4.1-231001"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -46,7 +47,15 @@ class MainLog:
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
         setTengahY = (self.parent.winfo_screenheight()-tinggi)//2
         self.parent.geometry("%ix%i+%i+%i" %(lebar, tinggi,setTengahX, setTengahY-40)) # setTengahY-40 : Biar lebih keatas
-        self.startlogin()
+        self.checkupdate()
+
+    def checkupdate(self):
+        version = VERSION
+        print('V-Local:',version.replace('.','').replace('-',''))
+        if checkversion(self.parent,version).result == True:
+            print('biasanya setelah update restart program')
+        else:
+            self.startlogin()
 
     def startlogin(self):
         getlogin = Login(self.parent)
