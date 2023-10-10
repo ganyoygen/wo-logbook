@@ -110,36 +110,32 @@ class Login(object):
                 and (matchpw == True):
                 if data[6] != True: # bagian ceking aktivasi + remove acct
                     datetodrop = datecreate.value + 604800 # 86400*7 (7 hari). Lebih baik buat custom
-                    duration = GetDuration(datetodrop - time.time())
-                    messagebox.showerror(title="Belum Aktivasi", \
+                    duration = GetDuration(datetodrop - time.time()) 
+                    messagebox.showerror(parent=self.top,title="Belum Aktivasi", 
                     message="Tidak dapat menggunakan program.\r\nsilahkan hubungi Administrator\r\nuntuk Aktivasi Departement.\
                         \r\n \
-                        \r\nSisa waktu: {}".format(duration.value))
+                        \r\nSisa waktu: {}".format(duration.value)) # msgbox above toplevel parent
                     # bagian remove account
                     if ((datetodrop - time.time()) <=0 and RemoveAcct(uid).result == True):
                             messagebox.showwarning(title="Account Info",message="Account Deleted successfully")
                     return
                 if data[7] == True:
-                    messagebox.showerror(title="Account dikunci", \
-                    message="Tidak dapat menggunakan program.\r\nAccount anda telah dikunci.")
+                    messagebox.showerror(parent=self.top,title="Account dikunci", \
+                    message="Tidak dapat menggunakan program.\r\nAccount [{0}] telah dikunci sejak,\
+                        \r\n[{1}] yang lalu."\
+                        .format(user,GetDuration(time.time() - GetSeconds(str(data[8])).value).value))
                     return
-                # if data[12] == None:
-                #     messagebox.showerror(title="Double Login Warning!", \
-                #     message="Tidak dapat login program.\r\nAccount anda sedang digunakan.")
-                #     return
                 if data[12] == None: # status Login: lastLogout = None
-                    if messagebox.askyesno('Double Login Warning!',
-                        "Account [{0}] sedang digunakan di [{1}]\r\nLogin sejak [{2}]\
+                    if messagebox.askyesno(parent=self.top,title='Double Login Warning!',
+                        message="Account [{0}] sedang digunakan di [{1}]\r\nLogin sejak [{2}]\
                         \r\n \
                         \r\nAkhiri sesi dan login ulang?"\
                         .format(user,data[10],data[9])) == True:
                         print('user pilih yes')
-                        # return
+                        # lanjut ijinkan user login
                     else: 
                         print('user pilih no')
                         return
-                # sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s,last_logout=%s WHERE uid=%s"
-                # val = (datetime.now(),host_name,host_ip,"",data[0])
                 sql = "UPDATE acct SET last_login=%s,last_host=%s,last_ip=%s,last_logout=%s WHERE uid=%s"
                 val = (datetime.now(),host_name,host_ip,"",data[0])
                 if (insert_data(sql,val)) == True:

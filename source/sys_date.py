@@ -56,19 +56,23 @@ class GetSeconds():
 
 class GetDuration():
     def __init__(self,seconds):
-        seconds_in_day = 60 * 60 * 24
-        seconds_in_hour = 60 * 60
-        seconds_in_minute = 60
+        day = seconds // 86400
+        seconds %= 86400
+        hour = seconds // 3600
+        seconds %= 3600
+        mins = seconds // 60
+        seconds %= 60
 
-        days = seconds // seconds_in_day
-        hours = (seconds - (days * seconds_in_day)) // seconds_in_hour
-        minutes = (seconds - (days * seconds_in_day) - (hours * seconds_in_hour)) // seconds_in_minute
-        if hours <= 0:
-            self.value = "{} menit.".format(int(minutes))
-        elif days <= 0:
-            self.value = "{0} jam, {1} menit.".format(int(hours),int(minutes))
-        else:
-            self.value = "{0} hari, {1} jam, {2} menit.".format(int(days),int(hours),int(minutes))
+        self.value = ""
+        if day > 0:
+            self.value += f"{int(day)} hari "
+        if hour > 0:
+            self.value += f"{int(hour)} jam "
+        if mins > 0:
+            self.value += f"{int(mins)} menit "
+        if seconds > 0:
+            self.value += f"{int(seconds)} detik"
+
 
 class RunClock():
     def __init__(self,parent,label):
@@ -166,7 +170,7 @@ class PopupDateTime(object):
         self.hour.focus_set()
         top.wait_visibility() # window needs to be visible for the grab
         top.grab_set()
-        top.bind("<FocusOut>", self.alarm)
+        # top.bind("<FocusOut>", self.alarm)
         self._set_transient(master)
 
     def onValidate(self, d, s, S):
@@ -217,7 +221,7 @@ class PopupDateTime(object):
         # window proses ikut parent (without icon taskbar)
         widget = self.top
         widget.withdraw() # Remain invisible while we figure out the geometry
-        widget.transient(master)
+        # widget.transient(master) # saat ini matikan saja, karena jika showdesktop wom sudah dibuka kembali
         widget.update_idletasks() # Actualize geometry information
         if master.winfo_ismapped():
             m_width = master.winfo_width()

@@ -9,7 +9,7 @@ from sys_mysql import getdata_all,getdata_one,insert_data
 from sys_date import GetSeconds 
 from sys_account import RemoveAcct
 from sys_pwhash import generate_hash,get_random_string
-
+from sys_treevsort import sort_treeview
 
 kolomUser = ("UID","Username","Class","Date Created","Activated","Locked",\
     "Date Locked","Last Login","Last Host","Last IP","Last Logout","Email")
@@ -139,9 +139,10 @@ class UserMgmt(tk.Frame):
             self.entPw.grid_forget()
 
             self.entDept.current(0)
-            self.selboxdept(None)
+            # self.selboxdept(None)
             self.btnLock.grid_forget()
             self.btnGenerPw.grid_forget()
+            self.btnSetDept["state"] = "disable"
             
         elif opsi == "read":
             self.entUid.config(state="readonly")
@@ -155,40 +156,43 @@ class UserMgmt(tk.Frame):
         else: pass
 
     def user_detail(self,event=None):
-        self.entryset("clear")
-        curItem = self.tabelUser.item(self.tabelUser.focus())
-        self.entUid.insert(END,curItem['values'][0])
-        self.entName.insert(END,curItem['values'][1])
-        self.entEmail.insert(END,curItem['values'][11])
+        try:
+            self.entryset("clear")
+            curItem = self.tabelUser.item(self.tabelUser.focus())
+            self.entUid.insert(END,curItem['values'][0])
+            self.entName.insert(END,curItem['values'][1])
+            self.entEmail.insert(END,curItem['values'][11])
 
-        if curItem['values'][2] == "ROOT": self.entDept.current(1)
-        elif curItem['values'][2] == "ENG": self.entDept.current(2)
-        elif curItem['values'][2] == "DOCON": self.entDept.current(3)
-        elif curItem['values'][2] == "CS": self.entDept.current(4)
-        elif curItem['values'][2] == "RCP": self.entDept.current(5)
-        else: self.entDept.current(0)
+            if curItem['values'][2] == "ROOT": self.entDept.current(1)
+            elif curItem['values'][2] == "ENG": self.entDept.current(2)
+            elif curItem['values'][2] == "DOCON": self.entDept.current(3)
+            elif curItem['values'][2] == "CS": self.entDept.current(4)
+            elif curItem['values'][2] == "RCP": self.entDept.current(5)
+            else: self.entDept.current(0)
 
-        if curItem['values'][4] != True: 
-            self.entSts.insert(END,"Temporary")
-            self.btnLock.grid_forget()
-        elif curItem['values'][5] == True: 
-            self.entSts.insert(END,"Locked")
-            self.btnLock.config(text='Unlock')
-            self.btnLock.grid(row=1,column=2,sticky=W)
-        else: 
-            self.entSts.insert(END,"Usage")
-            self.btnLock.config(text='Lock')
-            self.btnLock.grid(row=1,column=2,sticky=W)
-        self.entLastLog.insert(END,curItem['values'][7])
-        self.entLastPC.insert(END,curItem['values'][8])
-        self.entLastIP.insert(END,curItem['values'][9])
-        generpwcek = self.genlistpw.get(self.entUid.get()) #cek apakah uid sudah digenerate
-        if generpwcek == None: #jika belum generate, tampilkan tombol
-            self.btnGenerPw.grid(row=1,column=1,sticky=W)
-        else:  #jika sudah generate, tampilkan pw baru
-            self.entPw.grid(row=1,column=2,sticky=W)
-            self.entPw.insert(END,generpwcek)
-        self.entryset("read")
+            if curItem['values'][4] != True: 
+                self.entSts.insert(END,"Temporary")
+                self.btnLock.grid_forget()
+            elif curItem['values'][5] == True: 
+                self.entSts.insert(END,"Locked")
+                self.btnLock.config(text='Unlock')
+                self.btnLock.grid(row=1,column=2,sticky=W)
+            else: 
+                self.entSts.insert(END,"Usage")
+                self.btnLock.config(text='Lock')
+                self.btnLock.grid(row=1,column=2,sticky=W)
+            self.entLastLog.insert(END,curItem['values'][7])
+            self.entLastPC.insert(END,curItem['values'][8])
+            self.entLastIP.insert(END,curItem['values'][9])
+            generpwcek = self.genlistpw.get(self.entUid.get()) #cek apakah uid sudah digenerate
+            if generpwcek == None: #jika belum generate, tampilkan tombol
+                self.btnGenerPw.grid(row=1,column=1,sticky=W)
+            else:  #jika sudah generate, tampilkan pw baru
+                self.entPw.grid(row=1,column=2,sticky=W)
+                self.entPw.insert(END,generpwcek)
+            self.entryset("read")
+        except:
+            print('Tidak ada data di tabel')
 
     def generatePw(self):
         def dochangepw():
@@ -228,7 +232,8 @@ class UserMgmt(tk.Frame):
         results = getdata_all(sql,val)
         self.tabelUser.delete(*self.tabelUser.get_children()) #refresh, hapus dulu tabel lama
         for kolom in kolomUser:
-            self.tabelUser.heading(kolom,text=kolom)
+            # self.tabelUser.heading(kolom,text=kolom)
+            self.tabelUser.heading(kolom,text=kolom,command=lambda c=kolom: sort_treeview(self.tabelUser, c, False))
         self.tabelUser.column("UID", width=30,anchor="w")
         self.tabelUser.column("Username", width=100,anchor="w")
         self.tabelUser.column("Class", width=50,anchor="w")
@@ -242,7 +247,8 @@ class UserMgmt(tk.Frame):
         self.tabelUser.column("Last Logout", width=80,anchor="w")
         self.tabelUser.column("Email", width=80,anchor="w")
         
-        i=u=0
+        remacctlist = []
+        i=0
         for dat in results:
             if(i%2):
                 baris="genap"
@@ -252,28 +258,38 @@ class UserMgmt(tk.Frame):
             # dat[0] = uid, dat[3] = date_create, dat[4] = activated -lihat sql = ...
             datetodrop = GetSeconds(str(dat[3])).value + 604800 # 86400*7 (7 hari). Lebih baik buat custom
             if (dat[4] != True and (datetodrop - time.time()) <=0 and RemoveAcct(dat[0]).result == True):
-                # messagebox.showwarning(title="Account Info",message="Account Deleted successfully")
-                u+=1
+                remacctlist.append(dat[1])
             else: # tampilkan user yang tidak di delete pada tabel
                 self.tabelUser.insert('', 'end', values=dat, tags=baris)
             i+=1
         self.tabelUser.tag_configure("ganjil", background="gainsboro")
         self.tabelUser.tag_configure("genap", background="floral white")
-        if u > 0: # berikan info jika ada username yang berhasil dihapus
-            messagebox.showwarning(title="Account Info",message="Ditemukan {} Account telah berhasil dihapus.".format(u))
+        if len(remacctlist) > 0: # berikan info jika ada username yang berhasil dihapus
+            messagebox.showwarning(title="Account Info",message="Ditemukan {0} Account telah berhasil dihapus:\
+                \r\n{1}".format(len(remacctlist),remacctlist))
 
     def selboxdept(self,event):
         if self.entDept.get() == "":
-            self.btnSetDept["state"] = "disable"
+            messagebox.showwarning("Warning", "This set about remove account!")
+            self.btnSetDept["state"] = "normal"
         else:
             self.btnSetDept["state"] = "normal"
 
     def setDept(self):
         if len(self.entUid.get()) <= 0 : return
-        if messagebox.askokcancel('Setting Department','Set Username: {0} - Dept: {1}?'\
-            .format(self.entName.get(),self.entDept.get())) == True:
+        if self.entDept.get() == "":
+            confirm = messagebox.askokcancel('Setting Department','Remove Username: [{0}]?'\
+                .format(self.entName.get()))
+            dept = "USER"
+            activated = None
+        else:
+            confirm = messagebox.askokcancel('Setting Department','Set Username: {0} - Dept: {1}?'\
+                .format(self.entName.get(),self.entDept.get()))
+            dept = self.entDept.get()
+            activated = True
+        if confirm == True:
             sql = "UPDATE acct SET dept=%s, activated=%s WHERE uid=%s"
-            val = (self.entDept.get(),True,self.entUid.get())
+            val = (dept,activated,self.entUid.get())
             if (insert_data(sql,val)) == True:
                 messagebox.showinfo(title="Setting Department", \
                     message="Data sudah diupdate.")

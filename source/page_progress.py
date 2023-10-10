@@ -1,8 +1,6 @@
 import tkinter as tk
 import mysql.connector
 import os
-import csv # untuk write ke Excel
-import time
 import datetime
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
@@ -10,6 +8,7 @@ from tkinter.scrolledtext import ScrolledText
 from sys_mysql import read_db_config,getdata_one,getdata_all,insert_data
 from sys_date import PopupDateTime,CustomDateEntry,get_date,store_date
 from sys_entry import LimitEntry
+from sys_treevsort import sort_treeview
 from ico_images import iconimage
 
 kolomProgIfca = ("#","WO","IFCA","UNIT")
@@ -136,6 +135,11 @@ class PageProg(tk.Frame):
         self.srcdate = CustomDateEntry(srchbox,width=10,locale='en_UK')
         self.srcdate.bind('<Return>',self.srchprogtable)
         self.srcdate.bind("<KeyRelease>", self.srcdate.keycheck)
+        self.varcek=IntVar()
+        # self.varcek.set(1) # default On
+        # self.srcdate.config(state="disable")
+        self.btncek = ttk.Checkbutton(srchbox,variable=self.varcek,\
+                        text='All Scheduled',command=self.check_changed)
 
         self.btnFind = ttk.Button(srchbox,command=self.srchprogtable,\
             image=self.icon.icofind)
@@ -277,24 +281,33 @@ class PageProg(tk.Frame):
         else : pass
         # 3 #
 
+    def check_changed(self):
+        if self.varcek.get() == 0:
+            self.srcdate.config(state="normal")
+        else :
+            self.srcdate.config(state="disable")
+        self.progress_refresh() # jalankan saat ceklis berubah
+
     def progress_table(self,opsi):
         '''
-        opsi = <status WO>
+        opsi = <Value Radio Button>
         '''
         self.srcunit.delete(0, END)
         self.srcifca.delete(0, END)
         for kolom in kolomProgIfca:
-            self.tabelProg.heading(kolom,text=kolom)
+            self.tabelProg.heading(kolom,text=kolom,command=lambda c=kolom: sort_treeview(self.tabelProg, c, False))
         self.tabelProg.column("#", width=35,anchor="w")
         self.tabelProg.column("WO", width=50,anchor="e")
         self.tabelProg.column("IFCA", width=90,anchor="w")
         self.tabelProg.column("UNIT", width=90,anchor="w")
+        bysched = False
         if opsi == "PENDING" :
             sql = "SELECT no_wo, no_ifca, unit FROM logbook WHERE status_ifca LIKE %s ORDER BY no_ifca DESC"
         elif opsi == "BYENG":
             sql = "SELECT no_wo, no_ifca, unit FROM logbook WHERE +\
                 (stsprog_ifca LIKE %s OR stsprog_ifca LIKE '') AND status_ifca = 'PENDING' ORDER BY no_ifca DESC"
         elif opsi == "SCHED":
+            bysched = True
             sql = "SELECT unit, no_ifca, sched_prog FROM logbook WHERE +\
                 sched_prog LIKE %s ORDER BY sched_prog ASC"
             opsi = store_date(self.srcdate.get())
@@ -307,6 +320,11 @@ class PageProg(tk.Frame):
         else:
             sql = "SELECT no_wo, no_ifca, unit FROM logbook WHERE stsprog_ifca LIKE %s ORDER BY no_ifca DESC"
         val = ("%{}%".format(opsi),)
+        if (opsi == "" or self.varcek.get() == 1) and bysched == True:
+            # jika format tanggal gagal atau All Scheduled ON, tampilkan hanya schedule by tanggal tersedia
+            sql = "SELECT unit, no_ifca, sched_prog FROM logbook WHERE +\
+                sched_prog > %s ORDER BY sched_prog ASC"
+            val = (0,)
         results = getdata_all(sql, val)
 
         self.tabelProg.delete(*self.tabelProg.get_children()) #refresh, hapus dulu tabel lama
@@ -419,8 +437,10 @@ class PageProg(tk.Frame):
             self.labunit.grid_forget()
             self.srcunit.grid_forget()
             self.srcdate.grid(row=1,column=2,padx=1,sticky=W)
+            self.btncek.grid(row=0,column=4,sticky=S)
         else :
             self.srcdate.grid_forget()
+            self.btncek.grid_forget()
             self.labifca.grid(row=1,column=0,sticky=W,padx=3)
             self.srcifca.grid(row=1,column=1,padx=1,sticky=W)
             self.labunit.grid(row=1,column=2,sticky=E,padx=3)
@@ -716,5 +736,6 @@ if __name__ == "__main__":
     from sys_usrdebug import PopupUser
     root = ThemedTk(theme='clearlooks')
     setuser = PopupUser(root)
-    setuser.parent.wait_window(setuser.top)
-    testrun(setuser.user,setuser.dept)
+    root.wait_window(setuser.top)
+    try: testrun(setuser.user,setuser.dept)
+    except: pass

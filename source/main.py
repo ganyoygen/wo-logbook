@@ -13,7 +13,7 @@ from sys_date import RunClock
 from _checkver import checkversion
 from ico_images import iconimage
 
-VERSION = "4.1-231001"
+VERSION = "4.2-231010"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -134,10 +134,9 @@ def checksession(user,online):
         return True
     else: 
         # print("last login NOT match, kill session")
-        messagebox.showerror(title="WARNING: Double Login Detected!", \
-        message="Sesi anda telah berakhir.\
+        messagebox.showerror(title="WARNING: Double Login Detected!",message="Sesi anda telah berakhir.\
             \r\n\r\nAccount [{0}] telah berhasil Login kembali di:\
-            \r\nHost: {1} \r\nJam: {2}".format(data[1],data[10],data[9]))
+            \r\nHost: [{1}] Pada: [{2}]".format(data[1],data[10],data[9]))
         return False
 
 def start():

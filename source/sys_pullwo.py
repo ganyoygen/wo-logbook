@@ -31,7 +31,7 @@ class PullWoTable(object):
 
         top.wait_visibility() # window needs to be visible for the grab
         top.grab_set()
-        top.bind("<FocusOut>", self.alarm)
+        # top.bind("<FocusOut>", self.alarm)
         self._set_transient(parent)
         self.komponen()
 
@@ -39,7 +39,7 @@ class PullWoTable(object):
         # window proses ikut parent (without icon taskbar)
         widget = self.top
         widget.withdraw() # Remain invisible while we figure out the geometry
-        widget.transient(master)
+        # widget.transient(master) # saat ini matikan saja, karena jika showdesktop wom sudah dibuka kembali
         widget.update_idletasks() # Actualize geometry information
         if master.winfo_ismapped():
             m_width = master.winfo_width()

@@ -1,5 +1,27 @@
 Changelog
+WOM v4.2-231010
+---------------------------------------
+1. [LOGIN] MSGBOX
+ - Perbaikan messagebox pada toplevel parent
+2. [PAGEMAIN] Main Page WOM
+ - Penambahan cek sesi pada saat FocusOut
+ - Perbaikan posisi label
+ - Penambahan Opsi Cari by Staff
+ - Perbaikan msgbox duration
+ - Perbaikan ukuran tabel
+3. [SYSPULL, SYSDATE]
+ - Perbaikan window tidak muncul setelah showdesktop
+ - Perbaikan format duration
+4. [PAGEPROG] Progress Page WOM
+ - Penambahan All Schedule pada opsi Scheduled
+5. [PAGEUSER] User Page WOM for ROOT
+ - Penambahan opsi hapus account
+6. [SYSTVSORT] 
+ - Penambahan fungsi sort pada header tabel treeview
+=======================================
+
 WOM v4.1-231001
+68fc3ab67a46adda0c98d8e33e526739cb525b64
 ---------------------------------------
 1. [SYSTEM] Auto Update Program
  - WOM dilengkap patcher, versi terbaru yang tersedia di Server

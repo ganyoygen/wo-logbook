@@ -14,6 +14,7 @@ from sys_progbar import SetProgBar
 from sys_pullwo import PullWoTable
 from sys_entry import CusHourEnt, CusDateEnt
 from sys_config import checkmssql
+from sys_treevsort import sort_treeview
 from ico_images import iconimage
 
 judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action","Tanggal Done","Jam Done","Received")
@@ -40,6 +41,7 @@ class PageMain(tk.Frame):
         self.topFrame.bind('<ButtonPress-1>', self.ceksesi)
         self.midFrame.bind('<ButtonPress-1>', self.ceksesi)
         self.botFrame.bind('<ButtonPress-1>', self.ceksesi)
+        parent.bind("<FocusOut>",self.ceksesi)
 
     def ceksesi(self,event=None):
         # # debug True (bypass ceksesi)
@@ -116,10 +118,11 @@ class PageMain(tk.Frame):
         ttk.Label(topleft, text=':').grid(row=5, column=1, sticky=W,pady=5,padx=10)
         self.entStaff = ttk.Entry(topleft, width=20)
         self.entStaff.grid(row=5, column=2,sticky=W)
-
+        # space pemisah topleft dan topright
+        ttk.Label(self.topFrame, text="").grid(row=1, column=2, sticky=W,pady=5,padx=40)
         #samping kanan
         topright = ttk.Frame(self.topFrame)
-        topright.grid(row=1,column=2,sticky=W)
+        topright.grid(row=1,column=3,sticky=W)
         ttk.Label(topright, text="").grid(row=0, column=0, sticky=W,pady=5,padx=10)
         ttk.Label(topright, text="").grid(row=1, column=0, sticky=W,pady=5,padx=10)
         ttk.Label(topright, text="Status").grid(row=2, column=0, sticky=W,pady=5,padx=10)
@@ -200,7 +203,7 @@ class PageMain(tk.Frame):
         row1 = ttk.Frame(self.botFrame)
         row1.grid(row=0,column=1,sticky=W,padx=10)
         self.opsicari = ttk.Combobox(row1, \
-            values = ["IFCA","Tanggal", "Unit", "Work Req."], \
+            values = ["IFCA","Tanggal","Unit","Work Req.","Staff"], \
             state="readonly", width=10)
         self.opsicari.current(1)
         self.opsicari.grid(row=2, column=1,sticky=W)
@@ -421,6 +424,9 @@ class PageMain(tk.Frame):
         elif opsi == "Work Req.":
             self.sql = "SELECT * FROM logbook WHERE work_req LIKE %s ORDER BY date_create DESC"
             self.val = ("%{}%".format(cari),)
+        elif opsi == "Staff":
+            self.sql = "SELECT * FROM logbook WHERE staff LIKE %s ORDER BY date_create DESC"
+            self.val = ("%{}%".format(cari),)
         else: pass
 
     def auto_wo(self):
@@ -543,25 +549,24 @@ class PageMain(tk.Frame):
                 progbar.bytes += 1
             finish = time.perf_counter()
             usedsecs = finish-start
-            if usedsecs > 60: usedsecs = GetDuration(usedsecs).value
             messagebox.showinfo(title="Import File Result", \
                 message="Update IFCA: {0}/{1}\r\nTime Used: {2}"\
-                    .format(update,len(results),usedsecs))
+                    .format(update,len(results),GetDuration(usedsecs).value))
             self.onSearch() #Refresh table by search
         else: print("result:",len(results))
 
     def showtable(self,data):
         self.tabelIfca.delete(*self.tabelIfca.get_children()) #refresh, hapus dulu tabel lama
         for kolom in judul_kolom:
-            self.tabelIfca.heading(kolom,text=kolom)
+            self.tabelIfca.heading(kolom,text=kolom,command=lambda c=kolom: sort_treeview(self.tabelIfca, c, False))
         # self.tabelIfca.column("No", width=10,anchor="w")
         self.tabelIfca.column("WO", width=50,anchor="w")
         self.tabelIfca.column("IFCA", width=80,anchor="w")
         self.tabelIfca.column("Tanggal", width=80,anchor="w")
         self.tabelIfca.column("UNIT", width=80,anchor="w")
-        self.tabelIfca.column("Work Request", width=150,anchor="w")
+        self.tabelIfca.column("Work Request", width=190,anchor="w")
         self.tabelIfca.column("Staff", width=70,anchor="w")
-        self.tabelIfca.column("Work Action", width=150,anchor="w")
+        self.tabelIfca.column("Work Action", width=190,anchor="w")
         self.tabelIfca.column("Tanggal Done", width=80,anchor="w")
         self.tabelIfca.column("Jam Done", width=40,anchor="w")
         self.tabelIfca.column("Received", width=40,anchor="w")
@@ -646,10 +651,9 @@ class PageMain(tk.Frame):
                 progbar.bytes = rowno + 1
             finish = time.perf_counter()
             usedsecs = finish-start
-            if usedsecs > 60: usedsecs = GetDuration(usedsecs).value
             messagebox.showinfo(title="Import File Result", \
                 message="Update IFCA: {0}\r\nNew Record: {1}\r\nTime Used: {2}"\
-                    .format(update,insert,usedsecs))
+                    .format(update,insert,GetDuration(usedsecs).value))
         self.onSearch() #Refresh table by search
 
     def onMainExport(self): #export from database treeview
@@ -986,5 +990,6 @@ if __name__ == "__main__":
     from sys_usrdebug import PopupUser
     root = ThemedTk(theme='clearlooks')
     setuser = PopupUser(root)
-    setuser.parent.wait_window(setuser.top)
-    testrun(setuser.user,setuser.dept)
+    root.wait_window(setuser.top)
+    try: testrun(setuser.user,setuser.dept)
+    except: pass

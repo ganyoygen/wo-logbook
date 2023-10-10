@@ -1,9 +1,6 @@
 import tkinter as tk
-import datetime
 from tkinter import *
 from tkinter import ttk, messagebox
-from datetime import datetime
-# from sys_mysql import *
 from sys_mysql import getdata_one,insert_data
 from sys_pwhash import generate_hash,verify_password
 from sys_entry import LimitEntry
@@ -50,7 +47,7 @@ class About(tk.Frame):
 
         ttk.Label(self.topFrame, text='Email').grid(row=3,column=1,sticky=W,padx=10,pady=5)
         ttk.Label(self.topFrame, text=':').grid(row=3,column=2,sticky=W,padx=10,pady=5)
-        self.entEmail = ttk.Entry(self.topFrame,width=20)
+        self.entEmail = ttk.Entry(self.topFrame,width=30)
         self.entEmail.grid(row=3,column=3,sticky=W,pady=10)
 
         self.colLabCpw = ttk.Frame(self.topFrame)
