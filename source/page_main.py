@@ -220,6 +220,12 @@ class PageMain(tk.Frame):
         self.dateStart.bind("<KeyRelease>", self.dateStart.keycheck)
         self.dateEnd.bind("<KeyRelease>", self.dateEnd.keycheck)
 
+        # filter pencarian: on progress
+        # self.cariifca = ttk.Combobox(row1, \
+        #     values = ["ALL","BM","TN"], \
+        #     state="readonly",width=3)
+        # self.cariifca.grid(row=2,column=5,padx=5,sticky=W)
+
         # self.entCari.bind('<KeyRelease>',self.onSearch) #cari saat input apapun
         
         self.btnSearch = ttk.Button(row1, text='Search',\
@@ -244,7 +250,7 @@ class PageMain(tk.Frame):
 
         #tabel
         listifca = ttk.Frame(self.botFrame)
-        listifca.grid(row=2,column=1,sticky=W,padx=10)
+        listifca.grid(row=1,column=1,sticky=W,padx=10)
         self.tabelIfca = ttk.Treeview(listifca, columns=judul_kolom,show='headings')
         self.tabelIfca.bind("<Double-1>", self.mainlog_detail)
         sbVer = ttk.Scrollbar(listifca, orient='vertical',command=self.tabelIfca.yview)
@@ -255,6 +261,11 @@ class PageMain(tk.Frame):
         self.tabelIfca.pack(side=TOP, fill=BOTH)
         self.tabelIfca.configure(yscrollcommand=sbVer.set)
         self.tabelIfca.configure(xscrollcommand=sbHor.set)
+
+        row2 = ttk.Frame(self.botFrame)
+        row2.grid(row=2,column=1,sticky=W,padx=10)
+        self.labrecord = ttk.Label(row2, text='this label for showing table record(s)')
+        self.labrecord.grid(row=1, column=1)
 
         self.onClear()
 
@@ -396,10 +407,15 @@ class PageMain(tk.Frame):
 
     def onSearch(self,event=None):
         if self.ceksesi() == False: return # lakukan cek sesi
+        self.parent.config(cursor="watch")
         self.entrySet("mainclear")
         self.opsiStatus.current(0)
         self.querySearch() # set dulu variabel self.sql dan self.val
         results = getdata_all(self.sql,self.val)
+        if len(results) == 0:
+            self.labrecord.config(text="")
+        else:
+            self.labrecord.config(text=(len(results),"Record(s)"))
         self.showtable(results)
 
     def querySearch(self):
@@ -413,19 +429,19 @@ class PageMain(tk.Frame):
             else: #part jika search between date
                 sdate = store_date(self.dateStart.get())
                 edate = store_date(self.dateEnd.get())
-                self.sql = "SELECT * FROM logbook WHERE (date_create BETWEEN %s AND %s) ORDER BY no_ifca DESC"
+                self.sql = "SELECT * FROM logbook WHERE (date_create BETWEEN %s AND %s) ORDER BY date_create DESC, time_create DESC"
                 self.val = ('{}'.format(sdate),'{}'.format(edate))
         elif opsi == "IFCA":
             self.sql = "SELECT * FROM logbook WHERE no_ifca LIKE %s ORDER BY no_ifca DESC"
             self.val = ("%{}%".format(cari),)
         elif opsi == "Unit":
-            self.sql = "SELECT * FROM logbook WHERE unit LIKE %s ORDER BY date_create DESC"
+            self.sql = "SELECT * FROM logbook WHERE unit LIKE %s ORDER BY date_create DESC, time_create DESC"
             self.val = ("%{}%".format(cari),)
         elif opsi == "Work Req.":
-            self.sql = "SELECT * FROM logbook WHERE work_req LIKE %s ORDER BY date_create DESC"
+            self.sql = "SELECT * FROM logbook WHERE work_req LIKE %s ORDER BY date_create DESC, time_create DESC"
             self.val = ("%{}%".format(cari),)
         elif opsi == "Staff":
-            self.sql = "SELECT * FROM logbook WHERE staff LIKE %s ORDER BY date_create DESC"
+            self.sql = "SELECT * FROM logbook WHERE staff LIKE %s ORDER BY date_create DESC, time_create DESC"
             self.val = ("%{}%".format(cari),)
         else: pass
 
@@ -582,6 +598,7 @@ class PageMain(tk.Frame):
             i+=1
         self.tabelIfca.tag_configure("ganjil", background="gainsboro")
         self.tabelIfca.tag_configure("genap", background="floral white")                              
+        self.parent.config(cursor="")
 
     def onImport_csv(self):
         Thread(target=self.proses_import).start()
@@ -600,7 +617,7 @@ class PageMain(tk.Frame):
         with open(fnames) as cek_header:
             reader = csv.reader(cek_header)
             for row in reader:
-                if row == header_csv:
+                if row[0:8] == header_csv[0:8]: # 20250824: pastikan header 8 baris awal saja
                     break
                 else: 
                     messagebox.showerror(title="Import File Error", \
@@ -685,8 +702,6 @@ class PageMain(tk.Frame):
                     message="Permission denied: {}".format(directory))
                 return
             cWrite=csv.writer(filename)
-            cWrite.writerow(["Export time","",datetime.now()])
-            cWrite.writerow([""])
             cWrite.writerow(header_csv)
             i=1
             for dat in results:
@@ -699,6 +714,7 @@ class PageMain(tk.Frame):
             cWrite.writerow([""])
             cWrite.writerow(["Save to",directory])
             cWrite.writerow(["Finish",len(results),"record(s)"])
+            cWrite.writerow(["Export time","",datetime.now()]) # 20250824: pindahin ini agar header berada paling atas
             filename.close()
             messagebox.showinfo(title="Export File", \
                 message="Sudah tersimpan di: {}".format(directory))
@@ -823,6 +839,7 @@ class PageMain(tk.Frame):
         self.dateStart.delete(0, END)
         self.dateEnd.delete(0, END)
         self.opsiStatus.current(0)
+        # self.cariifca.current(0)
         # list wo hari ini
         self.opsicari.current(1)
         self.boxsearchsel(None)

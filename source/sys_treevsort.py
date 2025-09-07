@@ -4,8 +4,13 @@ from tkinter import ttk
 def sort_treeview(tree, col, descending):
     # Function to sort the Treeview by column
     data = [(tree.set(item, col), item) for item in tree.get_children('')]
-    # data.sort(key=lambda t: int(t[0]), reverse=descending) # Fixme: hanya sort number, selain itu gagal
-    data.sort(reverse=descending)
+    try:
+        # Coba konversi ke integer jika memungkinkan
+        data.sort(key=lambda x: int(x[0]), reverse=descending)
+    except ValueError:
+        # Jika ada non-integer, urutkan sebagai string
+        data.sort(key=lambda x: x[0], reverse=descending)
+
     for index, (val, item) in enumerate(data):
         tree.move(item, '', index)
     tree.heading(col, command=lambda: sort_treeview(tree, col, not descending))
@@ -24,12 +29,12 @@ if __name__ == "__main__":
         tree.column(col, width=100)
 
     # Insert data into the Treeview
-    data = [("Taliesin Megaira", 35, "USA"),
-            ("Fionn Teofilo", 28, "UK"),
-            ("Ata Caishen", 45, "France"),
+    data = [("Taliesin Megaira", 5, "USA"),
+            ("Fionn Teofilo", 8, "UK"),
+            ("Ata Caishen", 4, "France"),
             ("Marina Evie", 38, "Spain"),
             ("Xanthe Eligio", 32, "France"),
-            ("Fausta Tone", 30, "Australia"),
+            ("Fausta Tone", 3, "Australia"),
             ("Yawan Idane", 42, "Mongolia"),
             ("Rolph Noah", 30, "South Africa")]
 

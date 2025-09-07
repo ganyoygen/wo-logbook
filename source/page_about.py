@@ -1,4 +1,5 @@
 import tkinter as tk
+import os
 from tkinter import *
 from tkinter import ttk, messagebox
 from sys_mysql import getdata_one,insert_data
@@ -182,3 +183,20 @@ class About(tk.Frame):
                 self.cancelChPw(0)
             else:
                 self.cancelChPw(0)
+
+def testrun(user,dept):
+    notebook = ttk.Notebook(root) # lihat, self.parent = root
+    notebook.pack(fill="both", expand=True)
+    notebook.add(About(notebook,user,dept), text="Profile")
+    root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.mainloop()
+
+if __name__ == "__main__":
+    from ttkthemes import ThemedTk
+    from sys_usrdebug import PopupUser
+    root = ThemedTk(theme='clearlooks')
+    setuser = PopupUser(root)
+    root.wait_window(setuser.top)
+    try: testrun(setuser.user,setuser.dept)
+    except: pass

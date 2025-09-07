@@ -211,6 +211,9 @@ class PullWoTable(object):
                 # (len(dept) >= 2) untuk memastikan wo telah direceived departmen ex: user.dept
                 # print('skip ',value[2],' by:',value[11],'youre:',self.dept)
                 continue
+            elif self.dept == "ROOT": 
+                # lewat jika akun ROOT
+                continue
             else:
                 # tampilkan data di tabel
                 self.table.insert('', 'end', text="",values=value[1:])
@@ -283,34 +286,48 @@ class PullWoTable(object):
             self.showtable(None)
         else: print("Tabel kosong, results:",len(results))
 
+# class TestRun(object):
+#     def __init__(self,master):
+#         self.master=master
+#         self.entUser = LimitEntry(master,width=20)
+#         self.entUser.bind("<KeyRelease>", self.setuser)
+#         self.entUser.pack()
+#         self.opsidept = ttk.Combobox(master, \
+#             values = ["ENG","DOCON","RCP","CS"], \
+#             state="readonly",width=15)
+#         self.opsidept.current(1)
+#         self.opsidept.pack()
+#         self.setbtn=ttk.Button(master,text="OpenTable",command=self.popup,width=10)
+#         self.setbtn.pack()
+#         self.setbtn["state"] = "disabled"
 
-class TestRun(object):
-    def __init__(self,master):
-        self.master=master
-        self.entUser = LimitEntry(master,width=20)
-        self.entUser.bind("<KeyRelease>", self.setuser)
-        self.entUser.pack()
-        self.opsidept = ttk.Combobox(master, \
-            values = ["ENG","DOCON","RCP","CS"], \
-            state="readonly",width=15)
-        self.opsidept.current(1)
-        self.opsidept.pack()
-        self.setbtn=ttk.Button(master,text="OpenTable",command=self.popup,width=10)
-        self.setbtn.pack()
-        self.setbtn["state"] = "disabled"
+#     def setuser(self,event):
+#         s = event.widget
+#         if len(s.get()) < 1: self.setbtn["state"] = "disabled"
+#         else: self.setbtn["state"] = "normal"
 
-    def setuser(self,event):
-        s = event.widget
-        if len(s.get()) < 1: self.setbtn["state"] = "disabled"
-        else: self.setbtn["state"] = "normal"
+#     def popup(self):
+#         self.gopopup=PullWoTable(self.master,self.entUser.get(),self.opsidept.get())
+#         self.setbtn["state"] = "disabled"
+#         self.master.wait_window(self.gopopup.top)
+#         self.setbtn["state"] = "normal"
 
-    def popup(self):
-        self.gopopup=PullWoTable(self.master,self.entUser.get(),self.opsidept.get())
-        self.setbtn["state"] = "disabled"
-        self.master.wait_window(self.gopopup.top)
-        self.setbtn["state"] = "normal"
+# if __name__ == "__main__":
+#     root = ThemedTk(theme='scidblue')
+#     TestRun(root)
+#     root.mainloop()
+
+def testrun(user,dept):
+    root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    PullWoTable(root,user,dept)
+    root.mainloop()
 
 if __name__ == "__main__":
+    from ttkthemes import ThemedTk
+    from sys_usrdebug import PopupUser
     root = ThemedTk(theme='scidblue')
-    TestRun(root)
-    root.mainloop()
+    setuser = PopupUser(root)
+    root.wait_window(setuser.top)
+    try: testrun(setuser.user,setuser.dept)
+    except: pass

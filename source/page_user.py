@@ -1,4 +1,5 @@
 import tkinter as tk
+import os
 import time
 import datetime
 from tkinter import *
@@ -317,12 +318,14 @@ def testrun(user,dept):
     notebook.pack(fill="both", expand=True)
     notebook.add(UserMgmt(notebook,user,dept), text="User Mgmt")
     root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
-    # root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
     root.mainloop()
 
 if __name__ == "__main__":
     from ttkthemes import ThemedTk
+    from sys_usrdebug import PopupUser
     root = ThemedTk(theme='clearlooks')
-    user = 'Debug'
-    dept = 'ROOT'
-    testrun(user,dept)
+    setuser = PopupUser(root)
+    root.wait_window(setuser.top)
+    try: testrun(setuser.user,setuser.dept)
+    except: pass

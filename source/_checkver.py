@@ -38,24 +38,36 @@ class checkversion(object):
 
     def begin_checkupdate(self):
         update = str(self.remote)+'/'+'version.txt'
-        check = requests.get(update)
-        self.remotever = check.text
+        try:
+            check = requests.get(update, timeout=5)
+            self.remotever = check.text
         
-        print('V-Remote:',check.text.replace('.','').replace('-',''))
+            print('V-Remote:',check.text.replace('.','').replace('-',''))
 
-        if self.localver.replace('.','').replace('-','') < check.text.replace('.','').replace('-',''):
-            mb1 = messagebox.askyesno('Update Available Version: {0}'.format(self.remotever), \
-                'There is an update available. \
-                \r\nYour local Version: {0} \
-                \r\nClick yes to update.'.format(self.localver)) #confirming update with user
-            if mb1 is True:
-                self.result = True
-                self.run_main()
-            elif mb1 is False:
-                print('Result:',self.result)
-        else:
-            # messagebox.showinfo('Updates Not Available', 'No updates are available')
-            print("No updates are available")
+            if self.localver.replace('.','').replace('-','') < check.text.replace('.','').replace('-',''):
+                mb1 = messagebox.askyesno('Update Available Version: {0}'.format(self.remotever), \
+                    'There is an update available. \
+                    \r\nYour local Version: {0} \
+                    \r\nClick yes to update.'.format(self.localver)) #confirming update with user
+                if mb1 is True:
+                    self.result = True
+                    self.run_main()
+                elif mb1 is False:
+                    print('Result:',self.result)
+            else:
+                # messagebox.showinfo('Updates Not Available', 'No updates are available')
+                print("No updates are available")
+        
+        except requests.exceptions.Timeout:
+            messagebox.showerror("Error", "Request timeout! Server tidak merespons tepat waktu.")
+        except requests.exceptions.ConnectionError:
+            messagebox.showerror("Error", "Gagal terhubung ke server. Periksa koneksi internet.")
+        except requests.exceptions.HTTPError as e:
+            messagebox.showerror("Error", f"HTTP Error: {e.response.status_code}")
+        except requests.exceptions.RequestException as e:
+        # Tangkap semua error lain yang mungkin terjadi (misal: URL tidak valid)
+            messagebox.showerror("Error", f"Terjadi kesalahan: {e}")
+        
 
 def checkremote():
     #Read config.ini file

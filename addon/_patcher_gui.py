@@ -4,7 +4,7 @@ import subprocess
 import os
 from threading import Thread
 from configparser import ConfigParser
-from tkinter import ttk
+from tkinter import ttk,messagebox
 from bs4 import BeautifulSoup # pip install BeautifulSoup4
 from zipfile import ZipFile
 
@@ -48,6 +48,10 @@ class pathcing(object):
     
     def disable_event(self):
         pass
+        # if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
+        #     print("ok")
+        #     self.run_main()
+        # else: print("no")
 
     def keluar(self,event=None):
         subprocess.call("TASKKILL /F /IM wompatcher.exe", shell=True)
@@ -62,7 +66,12 @@ class pathcing(object):
     def downloadallindex(self):
         links = []
         chunk_size = 512
-        page = requests.get(self.remote)
+        try: 
+            page = requests.get(self.remote, timeout=5)
+        except requests.exceptions.RequestException as e:
+            # Tangkap semua error lain yang mungkin terjadi (misal: URL tidak valid)
+            messagebox.showerror("Error", f"Terjadi kesalahan: {e}")
+            self.parent.destroy()
         soup = BeautifulSoup(page.content, 'html.parser')
 
         for link in (soup.find_all('a')):

@@ -1,5 +1,30 @@
 Changelog
+WOM v4.8-250908
+---------------------------------------
+1. [PAGEMAIN, PAGEPROG]
+ - Penambahan label dibawah tabel untuk keterangan jumlah data
+2. [PAGEMAIN]
+ - Sortir dari database menggunakan gabungan tanggal dan jam
+ - Memastikan header import setidaknya 8 data dari awal(kiri)
+ - Penyesuaian File CSV pada export data agar header berada di atas 
+3. [PAGEPROG]
+ - Optimalisasi code dan fungsi
+ * 68fc3ab67a46adda0c98d8e33e526739cb525b64
+4. [USERDEBUG]
+ - Pada beberapa sub program dibutuhkan Debugging
+ * 68fc3ab67a46adda0c98d8e33e526739cb525b64
+5. [PULLWO]
+ - Akun ROOT tidak perlu melakukan pull WO
+ * 8d33d9cb90f256fd10635da84487b4449422cd4b
+6. [SYSTVSORT] 
+ - Perbaikan sortir pada angka di tabel
+ * 2192860b6dbbde35754573504aeb1eaf182b14cb
+7. [CHECKVER, PATCHER]
+ - Jika gagal request ke Server, tampilkan pesan error
+=======================================
+
 WOM v4.2-231010
+2192860b6dbbde35754573504aeb1eaf182b14cb
 ---------------------------------------
 1. [LOGIN] MSGBOX
  - Perbaikan messagebox pada toplevel parent

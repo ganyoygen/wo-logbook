@@ -1,11 +1,10 @@
 import tkinter as tk
-import mysql.connector
 import os
 import datetime
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from tkinter.scrolledtext import ScrolledText
-from sys_mysql import read_db_config,getdata_one,getdata_all,insert_data
+from sys_mysql import getdata_one,getdata_all,insert_data
 from sys_date import PopupDateTime,CustomDateEntry,get_date,store_date
 from sys_entry import LimitEntry
 from sys_treevsort import sort_treeview
@@ -92,9 +91,6 @@ class PageProg(tk.Frame):
         self.btnCommUpdate = ttk.Button(entBtnRight,text='Update',command=self.onProgCommUpd,width=6,\
             image=self.icon.icoupdt,compound=tk.LEFT)
         self.btnCommUpdate.grid(row=1,column=0,padx=5,sticky=W)
-        self.btnCommReturn = ttk.Button(entBtnRight,text='Return',command=self.onReturnWO,width=6)
-        self.btnCommReturn.bind("<Button-3>",self.onReturnWO) # percobaan tooltips
-        # self.btnCommReturn.grid(row=2,column=0,padx=5)
         self.btnSetSched = ttk.Button(entBtnRight,text='Schedule it',command=self.ScheduleIt,width=6,\
             image=self.icon.icoschd,compound=tk.LEFT)
         self.btnSetSched.grid(row=2,column=0,padx=5,sticky=W)
@@ -175,6 +171,15 @@ class PageProg(tk.Frame):
         self.tabelcomm.column("UPDATE", width=400,anchor="w")
         self.tabelcomm.column("OLEH", width=110,anchor="w")
         self.tabelcomm.column("DEPT", width=70,anchor="w")
+
+        profrm = ttk.Frame(self.botFrame)
+        profrm.grid(row=2,column=1,sticky=W,padx=10)
+        comfrm = ttk.Frame(self.botFrame)
+        comfrm.grid(row=2,column=2,sticky=W,padx=10)
+        self.recProgTab = ttk.Label(profrm, text='this label for showing table record(s)')
+        self.recProgTab.pack(side=BOTTOM, fill=BOTH)
+        self.recCommTab = ttk.Label(comfrm, text='this label for showing table record(s)')
+        self.recCommTab.pack(side=BOTTOM, fill=BOTH)
 
         self.progress_refresh()
     
@@ -275,7 +280,6 @@ class PageProg(tk.Frame):
         elif opsi == "disablebtn":
             self.btnSetSched.config(state="disable")
             self.btnCommUpdate.config(state="disable")
-            self.btnCommReturn.config(state="disable")
             self.btnCommTake.config(state="disable")
             self.btnCommDone.config(state="disable")
         else : pass
@@ -327,6 +331,12 @@ class PageProg(tk.Frame):
             val = (0,)
         results = getdata_all(sql, val)
 
+        self.recCommTab.config(text="")
+        if len(results) == 0:
+            self.recProgTab.config(text="")
+        else:
+            self.recProgTab.config(text=(len(results),"Record(s)"))
+
         self.tabelProg.delete(*self.tabelProg.get_children()) #refresh, hapus dulu tabel lama
 
         if results != None:
@@ -353,6 +363,11 @@ class PageProg(tk.Frame):
                 FROM onprogress WHERE no_ifca LIKE %s ORDER BY date_update DESC"
         val = ("%{}%".format(data),)
         results = getdata_all(sql, val)
+
+        if len(results) == 0:
+            self.recCommTab.config(text="")
+        else:
+            self.recCommTab.config(text=(len(results),"Record(s)"))
 
         for kolom in kolomCommIfca:
             self.tabelcomm.heading(kolom,text=kolom)
@@ -586,142 +601,6 @@ class PageProg(tk.Frame):
             else: 
                 # output kosong, batalkan perintah DONE
                 print("batalkan done")
-        #########
-### baru sampe sini [PAGEPROG]Optimization
-### object lawas: ###
-    def onReturnWO(self,event=None):
-        if not event == None:
-            print("event True =",Event) # percobaan tooltips
-            return
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            getIfca = self.progIfca.get()
-            getAccBy = self.commitby.get()
-            accandusr = getAccBy.upper().strip()+"@"+self.user
-            from datetime import datetime
-            getTimeAcc = datetime.now()
-            autocom = "[WO Return] dikembalikan oleh {}.".format(getAccBy.upper())
-            setStatus = "RETURNED"
-
-            cekaccp = "SELECT auth_dept FROM onprogress \
-                WHERE no_ifca = %s AND `commit_update` LIKE '%[WO OnProgress] diterima oleh%'"
-            cur.execute(cekaccp,(getIfca,))
-            data = cur.fetchone()
-
-            if len(getAccBy.strip()) == 0:
-                messagebox.showwarning(title="Peringatan",message="Siapa yang mengembalikan WO?")
-                self.commitby.focus_set()
-                self.commitby.delete(0, END)
-            elif self.dept != data[0]:
-                messagebox.showerror(title="Error",message="WO yang diterima oleh Dept. {0}, Tidak bisa dikembalikan oleh Dept. {1}.\r\n \
-                    \r\nWO Hanya bisa dikembalikan oleh Dept. yang sama saat WO diterima.".format(data[0],self.dept))
-            elif messagebox.askokcancel('Return WO','WO akan dikembalikan?') == True: 
-                sql1 = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login,auth_dept)"+\
-                "VALUES(%s,%s,%s,%s,%s,%s)"
-                cur.execute(sql1,(getIfca,getTimeAcc,autocom,accandusr,self.user,self.dept))
-                sql2 = "UPDATE logbook SET status_ifca=%s WHERE no_ifca =%s"
-                cur.execute(sql2,(setStatus,getIfca))
-                messagebox.showinfo(title="Informasi",message="WO Sudah dikembalikan oleh {}.".format(getAccBy))
-                self.progress_refresh()
-            else: pass
-            con.commit()
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err)) 
-
-    def onSetDoneWO(self,event=None):
-        if not event == None:
-            print("event True =",Event) # percobaan tooltips
-            return
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            getIfca = self.progIfca.get()
-            getAccBy = self.commitby.get()
-            accandusr = getAccBy.upper().strip()+"@"+self.user
-            getcommit = self.commitDetail.get(1.0,END) # ('1.0', 'end')
-            from datetime import datetime
-            getRealTime = datetime.now()
-            # autocom = "Status wo DONE oleh {}.".format(getAccBy)
-            setStatus = "DONE"
-
-            if len(getAccBy.strip()) == 0:
-                messagebox.showwarning(title="Peringatan",message="Siapa staff yang handle WO?")
-                self.commitby.focus_set()
-                self.commitby.delete(0, END)
-            elif len(getcommit.strip()) == 0: # .strip memastikan space/tab termasuk len 0
-                    messagebox.showwarning(title="Peringatan",message="Silahkan isi perubahan terlebih dahulu")
-                    self.commitDetail.focus_set()
-                    self.commitDetail.delete('1.0','end')
-            else: 
-                setdate = PopupDateTime(self.parent)
-                setdate.parent.wait_window(setdate.top)
-                if len(setdate.value.strip()) > 0: 
-                    getdate, gettime = setdate.value.split() #pisah tanggal dan jam
-
-                    sqllastcom = "INSERT INTO onprogress (no_ifca,date_update,commit_update,auth_by,auth_login,auth_dept)"+\
-                    "VALUES(%s,%s,%s,%s,%s,%s)"
-                    cur.execute(sqllastcom,(getIfca,getRealTime,getcommit.strip(),accandusr,self.user,self.dept))
-
-                    storedata = self.getDataComm(getIfca)
-
-                    sqlmain = "UPDATE logbook SET staff=%s,status_ifca=%s,date_done=%s,time_done=%s,work_act=%s WHERE no_ifca =%s"
-                    cur.execute(sqlmain,(getAccBy.upper(),setStatus,self.checktgl(getdate),gettime,storedata.strip(),getIfca))
-
-                    messagebox.showinfo(title="Informasi",message="Update telah tersimpan oleh {}.".format(getAccBy))
-                    self.progress_refresh()
-                else: 
-                    # output kosong, batalkan perintah DONE
-                    print("batalkan done")
-            con.commit()
-            cur.close()
-            con.close()
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err)) 
-
-    def getDataComm(self,data): #PR: RAMPINGKAN DATA
-        try:
-            db_config = read_db_config()
-            con = mysql.connector.connect(**db_config)
-            cur = con.cursor()
-            sql = "SELECT date_update,commit_update,auth_by,auth_dept \
-                    FROM onprogress WHERE no_ifca LIKE %s"
-        #     data = "TN10020352"
-            val = ("%{}%".format(data),)
-            cur.execute(sql, val)
-            results = cur.fetchall()
-            
-            self.commitDetail.delete('1.0', 'end')
-            for dat in results: 
-                #tampilkan mulai dari tanggal
-                # nantinya kumpulkan dulu data progres selanjutnya store ke sql
-                self.commitDetail.insert(END, dat)
-                self.commitDetail.insert(END, "\r\n")
-
-            getcom = self.commitDetail.get(1.0,END)
-            self.commitDetail.delete('1.0', 'end')
-            cur.close()
-            con.close()
-            return getcom
-        
-        except mysql.connector.Error as err:
-            messagebox.showerror(title="Error", \
-                message="SQL Log: {}".format(err))
-
-    def checktgl(self,data):
-        if len(str(data)) == 10:
-            cHari = str(data)[0:2]
-            cBulan = str(data)[3:5]
-            cTahun = str(data)[6:]
-            return datetime.date(int(cTahun),int(cBulan),int(cHari))
-        else:
-            return None
 
 def testrun(user,dept):
     notebook = ttk.Notebook(root) # lihat, self.parent = root
