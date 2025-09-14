@@ -4,11 +4,63 @@ import subprocess
 import os
 from threading import Thread
 from configparser import ConfigParser
-from tkinter import ttk,messagebox
+from tkinter import ttk,Toplevel,messagebox
 from bs4 import BeautifulSoup # pip install BeautifulSoup4
 from zipfile import ZipFile
 
 getfile = str(os.getcwd())+"\\"+"remote.ini"
+
+class PopupAddress(object):
+    def __init__(self,master):
+        top = self.top = Toplevel(master)
+        top.title("Input Remote Address")
+        self.parent = master
+        self.value = ""
+        topFrame = ttk.Frame(top)
+        topFrame.grid(row=0,column=0)
+        host=ttk.Label(topFrame,text="Host")
+        host.grid(row=0,column=0)
+        tikdua = ttk.Label(topFrame,text=":")
+        tikdua.grid(row=0,column=1)
+        self.host = ttk.Entry(topFrame,width=50)
+        self.host.grid(row=0, column=2)
+        self.okbtn=ttk.Button(topFrame,text="OK",width=7,command=self.cleanup)
+        self.okbtn.grid(row=1,column=2)
+        self._set_transient(master)
+
+    def _set_transient(self, master, relx=0.5, rely=3):
+        # window proses ikut parent (without icon taskbar)
+        widget = self.top
+        widget.withdraw() # Remain invisible while we figure out the geometry
+        widget.transient(master) # saat ini matikan saja, karena jika showdesktop wom sudah dibuka kembali
+        widget.update_idletasks() # Actualize geometry information
+        if master.winfo_ismapped():
+            m_width = master.winfo_width()
+            m_height = master.winfo_height()
+            m_x = master.winfo_rootx()
+            m_y = master.winfo_rooty()
+        else:
+            m_width = master.winfo_screenwidth()
+            m_height = master.winfo_screenheight()
+            m_x = m_y = 0
+        w_width = widget.winfo_reqwidth()
+        w_height = widget.winfo_reqheight()
+        x = m_x + (m_width - w_width) * relx
+        y = m_y + (m_height - w_height) * rely
+        if x+w_width > master.winfo_screenwidth():
+            x = master.winfo_screenwidth() - w_width
+        elif x < 0:
+            x = 0
+        if y+w_height > master.winfo_screenheight():
+            y = master.winfo_screenheight() - w_height
+        elif y < 0:
+            y = 0
+        widget.geometry("+%d+%d" % (x, y))
+        widget.deiconify() # Become visible at the desired location
+
+    def cleanup(self,event=None):
+        self.value = self.host.get()
+        self.top.destroy()
 
 class pathcing(object):
     def __init__(self,parent):
@@ -23,35 +75,41 @@ class pathcing(object):
         self.komponen()
 
     def komponen(self):
-        lebar=500
-        tinggi=50
+        lebar=650
+        tinggi=70
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
         setTengahY = (self.parent.winfo_screenheight()-tinggi)//2
         self.parent.geometry("%ix%i+%i+%i" %(lebar, tinggi,setTengahX, setTengahY-40)) # setTengahY-40 : Biar lebih keatas
-        # self.parent.overrideredirect(1)
+        # root.eval('tk::PlaceWindow . center')
 
         self.pbar = ttk.Progressbar(orient="horizontal",length=500,mode="determinate", maximum=100, value=0)
         self.pbar.pack()
         self.plabel = ttk.Label(text="")
         self.plabel.pack()
-        Thread(target=self.running).start()
+        self.replab = ttk.Label(text="")
+        self.replab.pack()
         # self.running()
+        dlthread = Thread(target=self.running)
+        dlthread.daemon = True # Allows the thread to exit with the main program
+        dlthread.start()
 
     def running(self):
         self.read_file()
-        self.downloadallindex()
+        if self.checkurl() == True:
+            self.downloadallindex(self.page)
         if self.unpackupdate(self.local) == True:
             self.result = True
             print('Result:',self.result)
-            print('Success: Your WOM has been succcessfuly update.')
+            self.replab.config(text='Success: Your WOM has been succcessfuly update.')
             self.run_main()
+        else: self.write_file()
     
     def disable_event(self):
         pass
-        # if (messagebox.askokcancel("Attention","Do you really want to exit the App?")):
-        #     print("ok")
-        #     self.run_main()
-        # else: print("no")
+        if (messagebox.askokcancel("Attention","Quit Update?")):
+            print("quit")
+            self.keluar()
+        else: print("no")
 
     def keluar(self,event=None):
         subprocess.call("TASKKILL /F /IM wompatcher.exe", shell=True)
@@ -60,18 +118,26 @@ class pathcing(object):
     def run_main(self):
         pathexe = str(self.local+"\\"+"main.exe")
         print("Starting mainprogram:",pathexe)
-        subprocess.call([pathexe])
+        try: 
+            subprocess.call([pathexe])
+        except Exception as err:
+            messagebox.showerror("Error", f"{err}")
         self.keluar()
 
-    def downloadallindex(self):
-        links = []
-        chunk_size = 512
+    def checkurl(self):
         try: 
             page = requests.get(self.remote, timeout=5)
+            self.page = page
+            return True
         except requests.exceptions.RequestException as e:
             # Tangkap semua error lain yang mungkin terjadi (misal: URL tidak valid)
-            messagebox.showerror("Error", f"Terjadi kesalahan: {e}")
-            self.parent.destroy()
+            self.replab.config(text=f"{e}")
+            self.write_file()
+            return False
+
+    def downloadallindex(self,page):
+        links = []
+        chunk_size = 512
         soup = BeautifulSoup(page.content, 'html.parser')
 
         for link in (soup.find_all('a')):
@@ -99,13 +165,17 @@ class pathcing(object):
                             percentage = i * 100/length
                             self.pbar["value"] = percentage
                             self.plabel.config(text=str(int(percentage))+"%")
+                            self.replab.config(text=str(cek)+' : '+str(link)+' : '+str(i)+' / '+str(length))
                     i += length - i
-                    print(cek,':',file)
-                    print('inc:',i,'size:',length)
-                    print(percentage,'%')
+                    # print(cek,':',file)
+                    # print('inc:',i,'size:',length)
+                    # print(percentage,'%')
             except OSError as e:
+                self.replab.config(text=str(cek)+':'+str(e))
                 pass
-                print(cek,':',e)
+            except Exception as e:
+                self.replab.config(text=str(cek)+':'+str(e))
+                pass
 
     def unpackupdate(self,destination):
         # sourcefile = current dir + file name
@@ -117,30 +187,38 @@ class pathcing(object):
             # into a specific location.
                 zObject.extractall(path=destination)
         except Exception as e:
-            print(e)
+            self.replab.config(text=str(e))
             return False
         else:
-            print('success unpack, then delete zip file')
+            self.replab.config(text='success unpack, then delete zip file')
             checkfile = os.path.isfile(sourcefile)
             if checkfile == True:
                 os.remove(sourcefile)
             return True
     
     def read_file(self):
-        config_object = ConfigParser()
-        config_object.read(getfile)
-        if config_object.has_section('server'):
-            item = config_object['server']
-            self.remote = item['update']
-            self.fileup = item['fileup']
-        else:
-            print('{0} not found in the {1} file'.format('server',getfile))
+        try:
+            config_object = ConfigParser()
+            config_object.read(getfile)
+            if config_object.has_section('server'):
+                item = config_object['server']
+                self.remote = item['update']
+                self.fileup = item['fileup']
+                self.checkurl()
+            else:
+                self.replab.config(text='{0} not found in {1}'.format('File server',getfile))
+                self.write_file()
+        except Exception as err:
+            print('Error:',err)
+            self.replab.config(text='File contains no section headers in {0}'.format(getfile))
             self.write_file()
     
     def write_file(self):
+        self.gopopup=PopupAddress(self.parent)
+        self.parent.wait_window(self.gopopup.top)
         config_object = ConfigParser()
         config_object['server'] = {
-            "update": "http://127.0.0.1/test-server",
+            "update": self.gopopup.value, # data dari input entry
             "fileup": "WOM_Update.zip"
             }
         with open(getfile, 'w') as conf:
@@ -148,8 +226,13 @@ class pathcing(object):
         self.read_file()
 
 
-if __name__ == "__main__":
+def start():
+    global root
     root=tk.Tk()
     pathcing(root)
-    # TestRun(root)
+    try: root.iconbitmap(str(os.getcwd()+"\\"+"icon-patcher.ico"))
+    except: pass
     root.mainloop()
+
+if __name__ == "__main__":
+    start()
