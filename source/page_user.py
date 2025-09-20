@@ -318,7 +318,7 @@ def testrun(user,dept):
     notebook.pack(fill="both", expand=True)
     notebook.add(UserMgmt(notebook,user,dept), text="User Mgmt")
     root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
-    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
     root.mainloop()
 
 if __name__ == "__main__":

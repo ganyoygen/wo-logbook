@@ -3,6 +3,7 @@ import os
 import pypyodbc
 from configparser import ConfigParser
 from tkinter import messagebox
+from sys_pwhash import decode
 
 getfile = str(os.getcwd())+"\\"+"config.ini"
 
@@ -21,7 +22,9 @@ def read_db_config_ms(filename=getfile, section='mssql'):
     if parser.has_section(section):
         items = parser.items(section)
         for item in items:
-            db[item[0]] = item[1]
+            if item[0] == 'pwd':
+                db[item[0]] = decode(item[1])
+            else: db[item[0]] = item[1]
 
         if db['cek'] != '1': 
             # print('mssql tidak aktif')

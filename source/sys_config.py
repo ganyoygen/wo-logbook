@@ -8,6 +8,7 @@ from configparser import ConfigParser
 from sys_entry import LimitEntry
 from sys_mysql import read_db_config
 from sys_mssql import read_db_config_ms
+from sys_pwhash import encode,decode
 
 getfile = str(os.getcwd())+"\\"+"config.ini"
 secmysql = 'mysql'
@@ -238,13 +239,13 @@ class SetConfig(object):
             self.entPort.insert(END,userinfo["port"])
             self.entDb.insert(END,userinfo["database"])
             self.entUser.insert(END,userinfo["user"])
-            self.entPass.insert(END,userinfo["password"])
+            self.entPass.insert(END,decode(userinfo["password"]))
         if config_object.has_section(secmssql):
             userinfoms = config_object[secmssql]
             self.entMSHost.insert(END,userinfoms["server"])
             self.entMSDb.insert(END,userinfoms["database"])
             self.entMSUser.insert(END,userinfoms["uid"])
-            self.entMSPass.insert(END,userinfoms["pwd"])
+            self.entMSPass.insert(END,decode(userinfoms["pwd"]))
             self.varcek.set(int(userinfoms["cek"]))
             self.entry_set("disable")
         else:
@@ -270,12 +271,12 @@ class SetConfig(object):
         update["port"] = self.entPort.get()
         update["database"] = self.entDb.get()
         update["user"] = self.entUser.get()
-        update["password"] = self.entPass.get()
+        update["password"] = encode(self.entPass.get())
 
         updatems["server"] = self.entMSHost.get()
         updatems["database"] = self.entMSDb.get()
         updatems["uid"] = self.entMSUser.get()
-        updatems["pwd"] = self.entMSPass.get()
+        updatems["pwd"] = encode(self.entMSPass.get())
         updatems["cek"] = str(self.varcek.get())
         #Write changes back to file
         with open(getfile, 'w') as conf:

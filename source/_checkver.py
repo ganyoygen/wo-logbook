@@ -26,14 +26,18 @@ class checkversion(object):
         self.begin_checkupdate()
 
     def keluar(self,event=None):
-        subprocess.call("TASKKILL /F /IM main.exe", shell=True)
+        subprocess.call("TASKKILL /F /IM main.exe", shell=True) # kill old program
+        subprocess.call("TASKKILL /F /IM wom.exe", shell=True)
         self.parent.destroy()
 
-    def run_main(self):
+    def begin_update(self):
         pathexe = str(self.local+"\\"+"wompatcher.exe")
         print("Starting patcher:",pathexe)
-        subprocess.call([pathexe],text=True) #Console hilang
-        # subprocess.call([pathexe]) #patcher keluar tapi keterangan blank hitam
+        try: 
+            subprocess.call([pathexe],text=True) #Console hilang
+            # subprocess.call([pathexe]) #patcher keluar tapi keterangan blank hitam
+        except Exception as err:
+            messagebox.showerror("Error", f"{err}")
         self.keluar()
 
     def begin_checkupdate(self):
@@ -51,7 +55,7 @@ class checkversion(object):
                     \r\nClick yes to update.'.format(self.localver)) #confirming update with user
                 if mb1 is True:
                     self.result = True
-                    self.run_main()
+                    self.begin_update()
                 elif mb1 is False:
                     print('Result:',self.result)
             else:

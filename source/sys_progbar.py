@@ -8,7 +8,7 @@ class SetProgBar(object):
     def __init__(self,parent,data):
         top = self.top = Toplevel(parent)
         top.title("Progress Bar")
-        top.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+        top.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
         self.parent = parent
         self.top.protocol("WM_DELETE_WINDOW", self.keluar)
         topFr = ttk.Frame(top)

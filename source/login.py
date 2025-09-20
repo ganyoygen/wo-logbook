@@ -11,15 +11,17 @@ from sys_account import RegisterAcct,RemoveAcct
 from sys_pwhash import verify_password
 from sys_date import GetSeconds,GetDuration
 from sys_config import SetConfig
+from ico_images import iconimage
 
 
 class Login(object):
     def __init__(self,parent):
         top = self.top = Toplevel(parent)
         top.title("Login Program")
-        top.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+        top.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
         self.parent = parent
         self.top.protocol("WM_DELETE_WINDOW", self.keluar)
+        self.icon = iconimage(self.parent)
 
         self.user = ""
         self.dept = ""
@@ -38,11 +40,14 @@ class Login(object):
         self.entryPassword.bind('<Return>', self.proses)
 
         ttk.Button(frame,text="ConfigDB",\
-            command=self.config_db,width=10).grid(row=2, column=0,padx=6)
+            command=self.config_db,width=8,\
+            image=self.icon.icoconfig,compound=tk.LEFT).grid(row=2, column=0,padx=6)
         ttk.Button(frame,text="Login",\
-            command=self.proses,width=10).grid(row=2, column=1,padx=6)
+            command=self.proses,width=8,\
+            image=self.icon.icologin,compound=tk.LEFT).grid(row=2, column=1,padx=6)
         ttk.Button(frame,text="Register",\
-            command=self.regacct,width=10).grid(row=2, column=2,padx=6)
+            command=self.regacct,width=8,\
+            image=self.icon.icoregis,compound=tk.LEFT).grid(row=2, column=2,padx=6)
 
         self.entryUsername.focus_set()
         # top.wait_visibility() 

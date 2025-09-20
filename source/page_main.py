@@ -21,6 +21,7 @@ judul_kolom = ("WO","IFCA","Tanggal","UNIT","Work Request","Staff","Work Action"
 header_csv = ["Index","No WO","No IFCA","Tanggal Buat","Jam Buat","Unit",\
             "Work Request","Staff","Work Action","Tanggal Selesai","Jam Selesai",\
             "Status WO","Diterima","Penerima","Tanggal Diterima","auth_login"]
+debug = False
 
 class PageMain(tk.Frame):
     def __init__(self,parent,user,dept):
@@ -45,7 +46,8 @@ class PageMain(tk.Frame):
 
     def ceksesi(self,event=None):
         # # debug True (bypass ceksesi)
-        # return True
+        if debug == True:
+            return debug
         # # end debug
         from main import checksession
         online = (str(self.online)[:-7])
@@ -994,11 +996,13 @@ class PageMain(tk.Frame):
             pass
 
 def testrun(user,dept):
+    global debug
+    debug = True
     notebook = ttk.Notebook(root) # lihat, self.parent = root
     notebook.pack(fill="both", expand=True)
     notebook.add(PageMain(notebook,user,dept), text="Main")
     root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
-    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
     root.mainloop()
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import os
 import mysql.connector
 from configparser import ConfigParser
 from tkinter import messagebox
+from sys_pwhash import decode
 
 getfile = str(os.getcwd())+"\\"+"config.ini"
 
@@ -20,7 +21,9 @@ def read_db_config(filename=getfile, section='mysql'):
     if parser.has_section(section):
         items = parser.items(section)
         for item in items:
-            db[item[0]] = item[1]
+            if item[0] == 'password':
+                db[item[0]] = decode(item[1])
+            else: db[item[0]] = item[1]
     else:
         raise Exception('{0} not found in the {1} file'.format(section, filename))
     return db

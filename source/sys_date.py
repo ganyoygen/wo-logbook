@@ -141,7 +141,7 @@ class CustomDateEntry(DateEntry):
 class PopupDateTime(object):
     def __init__(self,master):
         top = self.top = Toplevel(master)
-        top.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+        top.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
         self.parent = master
         self.value = ""
         topFrame = ttk.Frame(top)

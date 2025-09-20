@@ -16,7 +16,7 @@ class PullWoTable(object):
     def __init__(self,parent,user,dept):
         top = self.top = Toplevel(parent)
         top.title("Work Order Manager")
-        top.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main2.ico"))
+        top.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
         self.parent = parent
         self.user = user
         self.dept = dept
@@ -319,7 +319,7 @@ class PullWoTable(object):
 
 def testrun(user,dept):
     root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
-    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
     PullWoTable(root,user,dept)
     root.mainloop()
 

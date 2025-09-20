@@ -8,12 +8,15 @@ from tkinter import ttk,Toplevel,messagebox
 from bs4 import BeautifulSoup # pip install BeautifulSoup4
 from zipfile import ZipFile
 
+VERSION = "2.1-250920"
+
 getfile = str(os.getcwd())+"\\"+"remote.ini"
 
 class PopupAddress(object):
     def __init__(self,master):
         top = self.top = Toplevel(master)
         top.title("Input Remote Address")
+        top.protocol("WM_DELETE_WINDOW",self.keluar)
         self.parent = master
         self.value = ""
         topFrame = ttk.Frame(top)
@@ -24,6 +27,7 @@ class PopupAddress(object):
         tikdua.grid(row=0,column=1)
         self.host = ttk.Entry(topFrame,width=50)
         self.host.grid(row=0, column=2)
+        self.host.bind('<Return>', self.cleanup)
         self.okbtn=ttk.Button(topFrame,text="OK",width=7,command=self.cleanup)
         self.okbtn.grid(row=1,column=2)
         self._set_transient(master)
@@ -62,6 +66,10 @@ class PopupAddress(object):
         self.value = self.host.get()
         self.top.destroy()
 
+    def keluar(self,event=None):
+        pass
+        # close app by master windows
+
 class pathcing(object):
     def __init__(self,parent):
         self.parent = parent
@@ -72,7 +80,14 @@ class pathcing(object):
         # self.local = str(os.getcwd()+"\\"+"_testupdate") # for debugging
 
         subprocess.call("TASKKILL /F /IM main.exe", shell=True) # kill program before patching
+        subprocess.call("TASKKILL /F /IM wom.exe", shell=True) # kill program before patching
         self.komponen()
+        self.startwiththread()
+
+    def startwiththread(self):
+        dlthread = Thread(target=self.running)
+        dlthread.daemon = True # Allows the thread to exit with the main program
+        dlthread.start()
 
     def komponen(self):
         lebar=650
@@ -88,15 +103,9 @@ class pathcing(object):
         self.plabel.pack()
         self.replab = ttk.Label(text="")
         self.replab.pack()
-        # self.running()
-        dlthread = Thread(target=self.running)
-        dlthread.daemon = True # Allows the thread to exit with the main program
-        dlthread.start()
 
     def running(self):
         self.read_file()
-        if self.checkurl() == True:
-            self.downloadallindex(self.page)
         if self.unpackupdate(self.local) == True:
             self.result = True
             print('Result:',self.result)
@@ -116,7 +125,12 @@ class pathcing(object):
         self.parent.destroy()
 
     def run_main(self):
-        pathexe = str(self.local+"\\"+"main.exe")
+        pathexe = str(self.local+"\\"+"wom.exe")
+        oldwom = str(self.local+"\\"+"main.exe")
+        checkfile = os.path.isfile(oldwom)
+        if checkfile == True:
+            print('Deleted File:',oldwom)
+            os.remove(oldwom)
         print("Starting mainprogram:",pathexe)
         try: 
             subprocess.call([pathexe])
@@ -126,17 +140,16 @@ class pathcing(object):
 
     def checkurl(self):
         try: 
-            page = requests.get(self.remote, timeout=5)
-            self.page = page
+            self.page = requests.get(self.remote, timeout=5)
             return True
         except requests.exceptions.RequestException as e:
             # Tangkap semua error lain yang mungkin terjadi (misal: URL tidak valid)
+            self.plabel.config(text='')
             self.replab.config(text=f"{e}")
-            self.write_file()
             return False
 
     def downloadallindex(self,page):
-        links = []
+        self.listfile = links = []
         chunk_size = 512
         soup = BeautifulSoup(page.content, 'html.parser')
 
@@ -165,16 +178,17 @@ class pathcing(object):
                             percentage = i * 100/length
                             self.pbar["value"] = percentage
                             self.plabel.config(text=str(int(percentage))+"%")
-                            self.replab.config(text=str(cek)+' : '+str(link)+' : '+str(i)+' / '+str(length))
+                            self.replab.config(text=str(cek)+' / '+str(len(links))+' : '+str(link)+' : '+str(i)+' / '+str(length))
                     i += length - i
                     # print(cek,':',file)
                     # print('inc:',i,'size:',length)
                     # print(percentage,'%')
             except OSError as e:
-                self.replab.config(text=str(cek)+':'+str(e))
+                self.plabel.config(text='Found: '+str(len(links))+" Result(s)")
+                self.replab.config(text=str(cek)+' : '+str(e))
                 pass
             except Exception as e:
-                self.replab.config(text=str(cek)+':'+str(e))
+                self.replab.config(text=str(cek)+' : '+str(e))
                 pass
 
     def unpackupdate(self,destination):
@@ -188,6 +202,12 @@ class pathcing(object):
                 zObject.extractall(path=destination)
         except Exception as e:
             self.replab.config(text=str(e))
+            # File Update tidak sesuai, hapus file yang telah terdownload
+            for file in self.listfile:
+                sourcefile = str(destination+"\\"+file)
+                if os.path.isfile(sourcefile) == True:
+                    os.remove(sourcefile)
+                    print('Deleted File:',sourcefile)
             return False
         else:
             self.replab.config(text='success unpack, then delete zip file')
@@ -204,13 +224,14 @@ class pathcing(object):
                 item = config_object['server']
                 self.remote = item['update']
                 self.fileup = item['fileup']
-                self.checkurl()
+                if self.checkurl() == True:
+                    self.downloadallindex(self.page)
+                else: self.write_file()
             else:
-                self.replab.config(text='{0} not found in {1}'.format('File server',getfile))
+                self.replab.config(text='{0} not found in {1}'.format('URL',getfile))
                 self.write_file()
         except Exception as err:
-            print('Error:',err)
-            self.replab.config(text='File contains no section headers in {0}'.format(getfile))
+            self.replab.config(text=err)
             self.write_file()
     
     def write_file(self):
@@ -223,7 +244,7 @@ class pathcing(object):
             }
         with open(getfile, 'w') as conf:
             config_object.write(conf)
-        self.read_file()
+        self.running()
 
 
 def start():

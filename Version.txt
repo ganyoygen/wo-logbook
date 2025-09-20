@@ -1,5 +1,25 @@
 Changelog
+WOM v4.8-250920
+---------------------------------------
+1. [PATCHER v2.1-250920]
+ - Perbaikan dan feature
+ * dcd15c45fbac4cf47919465b56707bd0e7314741
+2. [ICON]
+ - Rebuild dan penambahan icon
+3. [CHECKVER]
+ - Handling jika wompatcher tidak ditemukan
+4. [PAGEMAIN]
+ - Pada mode debug, tidak perlu recode fungsi
+5. [PAGEPROG]
+ - Pencarian bisa dilakukan diantara tanggal pada Schedule Progress
+6. [SYSCONFG, SYSMYSQL, SYSMSSQL] 
+ - Password pada file config sudah dapat diencode/encrypt
+7. [file.spec]
+ - Compile Final dengan detail pada file application
+=======================================
+
 WOM v4.8-250908
+e81102e71f56da5beda16f4bbcaaa19268996ccb
 ---------------------------------------
 1. [PAGEMAIN, PAGEPROG]
  - Penambahan label dibawah tabel untuk keterangan jumlah data

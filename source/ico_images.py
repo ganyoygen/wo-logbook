@@ -45,3 +45,10 @@ class iconimage(object):
         self.icotake = icotake.subsample(2, 2)
         icodone = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"done.png"))
         self.icodone = icodone.subsample(2, 2)
+        
+        icoconfig = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"config.png"))
+        self.icoconfig = icoconfig.subsample(2, 2)
+        icologin = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"login.png"))
+        self.icologin = icologin.subsample(2, 2)
+        icoregis = tk.PhotoImage(file = str(os.getcwd()+"\\"+"icon"+"\\"+"register.png"))
+        self.icoregis = icoregis.subsample(2, 2)

@@ -13,7 +13,7 @@ from sys_date import RunClock
 from _checkver import checkversion
 from ico_images import iconimage
 
-VERSION = "4.8-250908"
+VERSION = "4.8-250920"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -144,7 +144,7 @@ def start():
     root = ThemedTk(theme='clearlooks')
     # root = Tk()
     root.title("Work Order Manager")
-    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
     MainLog(root)
     root.mainloop()
 
@@ -155,6 +155,6 @@ if __name__ == "__main__":
     # root = Tk()
     # root = ThemedTk(theme='scidblue')
     # root.title("Work Order Manager")
-    # root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    # root.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
     # MainLog(root)
     # root.mainloop()

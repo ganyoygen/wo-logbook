@@ -128,12 +128,14 @@ class PageProg(tk.Frame):
         self.srcunit.bind("<FocusIn>",self.srchbindunit)
         self.srcifca.bind('<Return>',self.srchprogtable)
         self.srcunit.bind('<Return>',self.srchprogtable)
-        self.srcdate = CustomDateEntry(srchbox,width=10,locale='en_UK')
-        self.srcdate.bind('<Return>',self.srchprogtable)
-        self.srcdate.bind("<KeyRelease>", self.srcdate.keycheck)
+        self.srcdate_a = CustomDateEntry(srchbox,width=10,locale='en_UK')
+        self.srcdate_a.bind('<Return>',self.srchprogtable)
+        self.srcdate_a.bind("<KeyRelease>", self.srcdate_a.keycheck)
+        self.srcdate_b = CustomDateEntry(srchbox,width=10,locale='en_UK')
+        self.srcdate_b.bind('<Return>',self.srchprogtable)
+        self.srcdate_b.bind("<KeyRelease>", self.srcdate_b.keycheck)
         self.varcek=IntVar()
         # self.varcek.set(1) # default On
-        # self.srcdate.config(state="disable")
         self.btncek = ttk.Checkbutton(srchbox,variable=self.varcek,\
                         text='All Scheduled',command=self.check_changed)
 
@@ -287,9 +289,11 @@ class PageProg(tk.Frame):
 
     def check_changed(self):
         if self.varcek.get() == 0:
-            self.srcdate.config(state="normal")
+            self.srcdate_a.config(state="normal")
+            self.srcdate_b.config(state="normal")
         else :
-            self.srcdate.config(state="disable")
+            self.srcdate_a.config(state="disable")
+            self.srcdate_b.config(state="disable")
         self.progress_refresh() # jalankan saat ceklis berubah
 
     def progress_table(self,opsi):
@@ -305,6 +309,7 @@ class PageProg(tk.Frame):
         self.tabelProg.column("IFCA", width=90,anchor="w")
         self.tabelProg.column("UNIT", width=90,anchor="w")
         bysched = False
+        between = False
         if opsi == "PENDING" :
             sql = "SELECT no_wo, no_ifca, unit FROM logbook WHERE status_ifca LIKE %s ORDER BY no_ifca DESC"
         elif opsi == "BYENG":
@@ -312,9 +317,16 @@ class PageProg(tk.Frame):
                 (stsprog_ifca LIKE %s OR stsprog_ifca LIKE '') AND status_ifca = 'PENDING' ORDER BY no_ifca DESC"
         elif opsi == "SCHED":
             bysched = True
-            sql = "SELECT unit, no_ifca, sched_prog FROM logbook WHERE +\
-                sched_prog LIKE %s ORDER BY sched_prog ASC"
-            opsi = store_date(self.srcdate.get())
+            if self.srcdate_a.get() == self.srcdate_b.get():
+                sql = "SELECT unit, no_ifca, sched_prog FROM logbook WHERE +\
+                    sched_prog LIKE %s ORDER BY sched_prog ASC"
+                opsi = store_date(self.srcdate_a.get())
+            else: #part jika search between date
+                between = True
+                sdate = store_date(self.srcdate_a.get())
+                edate = store_date(self.srcdate_b.get())
+                sql = "SELECT unit, no_ifca, sched_prog FROM logbook WHERE +\
+                    (sched_prog BETWEEN %s AND %s) ORDER BY sched_prog ASC"
             self.tabelProg.heading('1', text='UNIT')
             self.tabelProg.heading('3', text='Scheduled')
             self.tabelProg.column("0", width=15,anchor="w")
@@ -329,6 +341,8 @@ class PageProg(tk.Frame):
             sql = "SELECT unit, no_ifca, sched_prog FROM logbook WHERE +\
                 sched_prog > %s ORDER BY sched_prog ASC"
             val = (0,)
+        elif between == True:
+            val = ('{}'.format(sdate),'{}'.format(edate))
         results = getdata_all(sql, val)
 
         self.recCommTab.config(text="")
@@ -451,10 +465,12 @@ class PageProg(tk.Frame):
             self.srcifca.grid_forget()
             self.labunit.grid_forget()
             self.srcunit.grid_forget()
-            self.srcdate.grid(row=1,column=2,padx=1,sticky=W)
+            self.srcdate_a.grid(row=1,column=2,padx=1,sticky=W)
+            self.srcdate_b.grid(row=1,column=3,padx=1,sticky=W)
             self.btncek.grid(row=0,column=4,sticky=S)
         else :
-            self.srcdate.grid_forget()
+            self.srcdate_a.grid_forget()
+            self.srcdate_b.grid_forget()
             self.btncek.grid_forget()
             self.labifca.grid(row=1,column=0,sticky=W,padx=3)
             self.srcifca.grid(row=1,column=1,padx=1,sticky=W)
@@ -607,7 +623,7 @@ def testrun(user,dept):
     notebook.pack(fill="both", expand=True)
     notebook.add(PageProg(notebook,user,dept), text="Progress")
     root.title("Project Logbook by GanyoyGen - Debug - Test Log: {0}.{1}".format(user,dept))
-    root.iconbitmap(str(os.getcwd()+"\\"+"icon-icons.com_main.ico"))
+    root.iconbitmap(str(os.getcwd()+"\\"+"icon-main.ico"))
     root.mainloop()
 
 if __name__ == "__main__":
