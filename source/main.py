@@ -10,7 +10,7 @@ from page_about import About
 from login import Login
 from sys_mysql import insert_data,getdata_one
 from sys_date import RunClock
-from _checkver import checkversion
+from _checkver import CheckVersion
 from ico_images import iconimage
 
 VERSION = "4.8-250920"
@@ -51,8 +51,7 @@ class MainLog:
 
     def checkupdate(self):
         version = VERSION
-        print('V-Local:',version.replace('.','').replace('-',''))
-        if checkversion(self.parent,version).result == True:
+        if CheckVersion(self.parent,version).result == True:
             print('biasanya setelah update restart program')
         else:
             self.startlogin()
