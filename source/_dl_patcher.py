@@ -11,6 +11,7 @@ class PatcherDownloader:
         self.url = url
         self.local_path = local_path
         self.on_finish = on_finish
+        self.parent.protocol("WM_DELETE_WINDOW",self.keluar)
 
         # ==== Atur posisi window di tengah ====
         self.center_window(650, 125)
@@ -33,7 +34,11 @@ class PatcherDownloader:
         # Tombol mulai
         self.btn_start = ttk.Button(self.frame, text="Mulai Download",
                                     command=self.start_download_thread)
-        self.btn_start.pack(pady=5)
+        # self.btn_start.pack(pady=5)
+        self.start_download_thread()
+
+    def keluar(self,event=None):
+        self.parent.destroy()
 
     def center_window(self, width, height):
         """Atur window parent agar muncul di tengah layar"""
@@ -81,9 +86,12 @@ class PatcherDownloader:
                 return
             
             # === Download sukses ===
-            self.parent.after(0, lambda: messagebox.showinfo("Selesai", f"Patcher berhasil diunduh ke:\n{self.local_path}"))
+            # self.parent.after(0, lambda: messagebox.showinfo("Selesai", f"Patcher berhasil diunduh ke:\n{self.local_path}"))
+            # self.parent.after(0, lambda: self.keluar())
+            print(f'onfinish {self.on_finish}')
             if self.on_finish:
                 self.parent.after(0, self.on_finish)
+            self.keluar() # setelah download selesai, agar bisa jalankan wompatcher.exe di _checkver.py
                         
         except Exception as e:
             self.parent.after(0, lambda: messagebox.showerror("Error", f"Gagal download patcher:\n{e}"))

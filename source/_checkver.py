@@ -15,7 +15,9 @@ VERSION = "1.0-201026" # sample version
 class CheckVersion(object):
     def __init__(self,parent,verlocal):
         self.parent = parent
-        self.parent.protocol("WM_DELETE_WINDOW",self.keluar)
+
+        # ini disable saja, untuk konfirmasi saat quit WOM
+        # self.parent.protocol("WM_DELETE_WINDOW",self.keluar)
     
         self.result = False
         self.local = os.getcwd()
@@ -30,32 +32,27 @@ class CheckVersion(object):
             self.remote = checkremote()
         
         self.remotefile = str(self.remote)+'/'+'Version.json'
+        self.local_patch = str(self.local+"\\"+"wompatcher.exe")
 
         subprocess.call("TASKKILL /F /IM wompatcher.exe", shell=True) # kill wompatcher while running main
         self.check_remotefile()
-        # self.update_or_pass()
 
-#cek lagi ini, jika update tersedia tapi wompathcher tidak ditemukan jgn close wom
     def keluar(self,event=None):
-        # subprocess.call("TASKKILL /F /IM main.exe", shell=True) # kill old program
-        # subprocess.call("TASKKILL /F /IM wom.exe", shell=True)
         self.parent.destroy()
 
-    def begin_update(self):
-        pathexe = str(self.local+"\\"+"wompatcher.exe")
-        self.check_patcher(pathexe)
-        print("Starting patcher:",pathexe)
-        print("Debug tahan dulu, return")
-        return
+    def run_patcher(self):
+        print("Starting patcher:",self.local_patch)
         try: 
-            subprocess.Popen([pathexe],text=True) #Console hilang
-            # subprocess.call([pathexe]) #patcher keluar tapi keterangan blank hitam
+            subprocess.Popen([self.local_patch],text=True) #Console hilang
+            # subprocess.call([self.local_patch]) #patcher keluar tapi keterangan blank hitam
         except Exception as err:
             messagebox.showerror("Error", f"{err}")
-        # self.keluar()
+        self.keluar()
 
-    def check_patcher(self,pathpatcher):
-        def need_update(remotever: str, localver: str | None) -> bool:
+    def check_patcher(self):
+        # def need_update(remotever: str, localver: str | None) -> bool:
+        from typing import Optional
+        def need_update(remotever: str, localver: Optional[str]):
             """
             Return True kalau perlu update.
             """
@@ -80,8 +77,8 @@ class CheckVersion(object):
         localver = None
         remotever = self.ver_data.get("patcher-ver", "").strip()
         print(f'Patcher Remote: {remotever}')
-        if os.path.exists(pathpatcher):
-            localver = get_exe_version(pathpatcher)
+        if os.path.exists(self.local_patch):
+            localver = get_exe_version(self.local_patch)
             print(f'Patcher _Local: {localver}')
         else:
             print("File Patcher tidak ditemukan.")
@@ -89,18 +86,19 @@ class CheckVersion(object):
         
         if need_update(remotever, localver):
             dl_file = f"{self.remote}/wompatcher.exe"
-            # self.parent.after(0, lambda: PatcherDownloader(self.parent, dl_file, pathpatcher))
+            # self.parent.after(0, lambda: PatcherDownloader(self.parent, dl_file, self.local_patch))
             self.parent.after(0, lambda: PatcherDownloader(
             self.parent,
             dl_file,
-            pathpatcher,
+            self.local_patch,
             on_finish=lambda: (
-                subprocess.Popen([pathpatcher]) if os.path.exists(pathpatcher) else messagebox.showerror("Error", "Patcher gagal diunduh")
+                subprocess.Popen([self.local_patch]) if os.path.exists(self.local_patch) else messagebox.showerror("Error", "Patcher gagal diunduh")
             )
             ))
             print("⚠️ Perlu update patcher dari server")
         else:
             print("✅ Patcher sudah versi terbaru")
+            self.run_patcher()
 
     def check_remotefile(self):
         try:
@@ -109,7 +107,6 @@ class CheckVersion(object):
             # remotever = check.text.strip() # ini dari file .txt
 
             self.ver_data = json.loads(check.text) # Parse sebagai JSON
-            # return self.ver_data
 
         except requests.exceptions.Timeout:
             messagebox.showerror("Error", "Request timeout! Server tidak merespons tepat waktu.")
@@ -123,7 +120,6 @@ class CheckVersion(object):
         else: 
             print(f'self.ver_data: {self.ver_data}')
             self.update_or_pass()
-        # return
 
     def update_or_pass(self):
         # remotever = str(self.check_remotefile()("wom-version", "").strip())
@@ -143,12 +139,11 @@ class CheckVersion(object):
                 \r\nClick yes to update.'.format(self.localver)) #confirming update with user
             if mb1 is True:
                 self.result = True
-                self.begin_update()
+                self.check_patcher()
         else:
             # messagebox.showinfo('Updates Not Available', 'No updates are available')
             print("No updates are available")      
-        print(f'self.resut = {self.result}')
-        return
+        print(f'self.result = {self.result}')
 
 
 def checkremote():
@@ -175,6 +170,6 @@ def get_exe_version(file_path):
 
 if __name__ == "__main__":
     root=tk.Tk()
-    # root.iconify()  # root minimize
+    root.iconify()  # root minimize
     CheckVersion(root,VERSION)
     root.mainloop()
