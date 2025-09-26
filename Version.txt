@@ -1,5 +1,17 @@
 Changelog
+WOM v4.8-250926
+---------------------------------------
+1. [PATCHER v2.2-250922]
+ - Perbaikan dan feature
+ * 4df24d91366cacad46e836afc1be6589c154a39d
+2. [Version]
+ - Handle veri dengan file json di server
+3. [CHECKVER]
+ - Auto self update untuk wompatcher
+=======================================
+
 WOM v4.8-250920
+8309ae90527b75d15880a6f65d787bc4934a14a2
 ---------------------------------------
 1. [PATCHER v2.1-250920]
  - Perbaikan dan feature

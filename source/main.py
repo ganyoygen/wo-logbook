@@ -13,7 +13,7 @@ from sys_date import RunClock
 from _checkver import CheckVersion
 from ico_images import iconimage
 
-VERSION = "4.8-250920"
+VERSION = "4.8-250926"
 
 class WindowDraggable():
     def __init__(self, label):
@@ -47,7 +47,9 @@ class MainLog:
         setTengahX = (self.parent.winfo_screenwidth()-lebar)//2
         setTengahY = (self.parent.winfo_screenheight()-tinggi)//2
         self.parent.geometry("%ix%i+%i+%i" %(lebar, tinggi,setTengahX, setTengahY-40)) # setTengahY-40 : Biar lebih keatas
-        self.checkupdate()
+        
+        # self.checkupdate() # jangan panggil langsung di sini
+        self.parent.after(0, self.checkupdate)  # ✅ jadwalkan setelah mainloop aktif
 
     def checkupdate(self):
         version = VERSION
